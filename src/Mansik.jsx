@@ -3144,10 +3144,11 @@ const ChatV = ({ data, user }) => {
     )
       setEsc(true);
     try {
-      const r = await fetch("http://localhost:5000/chat", {
+      const r = await fetch("https://mansik-app.onrender.com/chat", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json" },
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           model: "mistralai/mistral-7b-instruct",
           messages: [
