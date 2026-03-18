@@ -3144,15 +3144,10 @@ const ChatV = ({ data, user }) => {
     )
       setEsc(true);
     try {
-      const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      const r = await fetch("http://localhost:5000/chat", {
         method: "POST",
         headers: {
-          Authorization:
-            "Bearer  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",
-          "Content-Type": "application/json",
-          "HTTP-Referer": "http://localhost:5173",
-          "X-Title": "Mansik App",
-        },
+          "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "mistralai/mistral-7b-instruct",
           messages: [

@@ -10,7 +10,8 @@ app.post("/chat", async (req, res) => {
     const response = await fetch("http://localhost:5000/chat", {
       method: "POST",
       headers: {
-        Authorization: "Bearer YOUR_API_KEY",
+        Authorization:
+          "Bearer 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",
         "Content-Type": "application/json",
       },
       body: JSON.stringify(req.body),
