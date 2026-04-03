@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from "react";
+import { auth } from "./firebase";
+import { signOut } from "firebase/auth";
 import {
   AreaChart,
   Area,
@@ -72,10 +74,10 @@ const G = () => (
     @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Lora:ital,wght@0,400;0,500;1,400&family=Caveat:wght@400;500;600&display=swap');
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
-      --cream:#F7F0E8;--parchment:#EFE6D8;--blush:#E8C8C2;--dusty:#D4A9A3;
-      --rose:#B8837C;--sky:#C2D0DC;--sky-d:#97AEC0;--sage:#C4CDB8;--sage-d:#8FA08A;
-      --lav:#CCC4D8;--lav-d:#9B8FB0;--honey:#E2C88A;--honey-d:#C4A45A;
-      --brown:#7A5C4A;--brown-l:#A8846E;--text:#4A3728;--soft:#7A6658;--mute:#A89080;--ink:#2E1F14;
+      --cream:#ffffff;--parchment:#fafaf8;--blush:#e0f5d5;--dusty:#cce5ce;
+      --rose:#558b5a;--sky:#e0f0ff;--sky-d:#b3d9ff;--sage:#eaffe6;--sage-d:#c9f0a1;
+      --lav:#faedfd;--lav-d:#e8b0f5;--honey:#fffee0;--honey-d:#fff9b3;
+      --brown:#0f2b16;--brown-l:#315c38;--text:#17221a;--soft:#4a5449;--mute:#7e8b7d;--ink:#0b1a0e;
     }
     body::before{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
       background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
@@ -202,8 +204,8 @@ const Cursor = () => {
     };
     const lp = () => {
       if (ring.current) {
-        lag.current.x += (pos.current.x - lag.current.x) * 0.12;
-        lag.current.y += (pos.current.y - lag.current.y) * 0.12;
+        lag.current.x += (pos.current.x - lag.current.x) * 0.45;
+        lag.current.y += (pos.current.y - lag.current.y) * 0.45;
         ring.current.style.left = lag.current.x + "px";
         ring.current.style.top = lag.current.y + "px";
       }
@@ -521,16 +523,7 @@ const PIL = {
   },
 };
 
-const HIST = [
-  { id: 1, date: "2025-10-15", score: 16, severity: "Low" },
-  { id: 2, date: "2025-11-01", score: 23, severity: "Moderate" },
-  { id: 3, date: "2025-11-20", score: 30, severity: "Moderate" },
-  { id: 4, date: "2025-12-05", score: 28, severity: "Moderate" },
-  { id: 5, date: "2025-12-22", score: 40, severity: "High" },
-  { id: 6, date: "2026-01-08", score: 42, severity: "High" },
-  { id: 7, date: "2026-02-01", score: 34, severity: "Moderate" },
-  { id: 8, date: "2026-02-20", score: 21, severity: "Moderate" },
-];
+const HIST = [];
 const calcSc = (rs) =>
   PSS.reduce((s, q, i) => {
     const v = rs[i] ?? 0;
@@ -928,7 +921,7 @@ const Auth = ({ onAuth }) => {
               {busy
                 ? "One moment…"
                 : mode === "login"
-                  ? "Enter gently →"
+                  ? "Enter →"
                   : "Begin →"}
             </button>
           </div>
@@ -962,6 +955,7 @@ const Sidebar = ({ view, setView, user, latest, onLogout }) => (
       height: "100vh",
       position: "sticky",
       top: 0,
+      overflowY: "auto",
       backdropFilter: "blur(10px)",
     }}
   >
@@ -1096,7 +1090,7 @@ const Sidebar = ({ view, setView, user, latest, onLogout }) => (
         style={{ color: "var(--rose)" }}
       >
         <Ico n="exit" s={16} c="var(--rose)" sw={1.8} />
-        Leave gently
+        Leave
       </div>
     </div>
   </div>
@@ -2369,8 +2363,8 @@ const Anlyt = ({ data }) => {
           <div className="st" style={{ fontSize: 19, marginBottom: 16 }}>
             Wellness Profile
           </div>
-          <ResponsiveContainer width="100%" height={220}>
-            <RadarChart data={radar}>
+          <ResponsiveContainer width="100%" height={240}>
+            <RadarChart data={radar} outerRadius="65%">
               <PolarGrid stroke="rgba(200,170,150,.18)" />
               <PolarAngleAxis
                 dataKey="s"
@@ -2463,6 +2457,7 @@ const Anlyt = ({ data }) => {
 /* ── Persona ── */
 const Pers = ({ persona, setPersona }) => {
   const [active, setActive] = useState("Health");
+  const [customTag, setCustomTag] = useState("");
   const tog = (cat, ag) =>
     setPersona((p) => {
       const cur = p[cat] || [],
@@ -2563,7 +2558,7 @@ const Pers = ({ persona, setPersona }) => {
             <button
               key={k}
               data-h
-              onClick={() => setActive(k)}
+              onClick={() => { setActive(k); setCustomTag(""); }}
               style={{
                 padding: "8px 16px",
                 borderRadius: 30,
@@ -2661,6 +2656,32 @@ const Pers = ({ persona, setPersona }) => {
               </div>
             );
           })}
+          {(persona[active] || []).filter(ag => !PIL[active].a.includes(ag)).map((ag) => (
+            <div
+              key={ag}
+              className="pp on"
+              data-h
+              onClick={() => tog(active, ag)}
+              style={{ background: PIL[active].d }}
+            >
+              ✓ {ag}
+            </div>
+          ))}
+          <form 
+            onSubmit={(e) => { 
+              e.preventDefault(); 
+              if (customTag.trim()) { tog(active, customTag.trim()); setCustomTag(""); } 
+            }}
+            style={{ display: "inline-flex", gap: "6px", alignItems: "center" }}
+          >
+            <input 
+              className="si" 
+              style={{ width: 140, padding: "6px 12px", borderRadius: 30 }} 
+              placeholder="+ Custom..." 
+              value={customTag} 
+              onChange={e => setCustomTag(e.target.value)} 
+            />
+          </form>
         </div>
       </div>
       {Object.values(persona).some((v) => v.length > 0) && (
@@ -3144,7 +3165,7 @@ const ChatV = ({ data, user }) => {
     )
       setEsc(true);
     try {
-      const r = await fetch("https://mansik-app.onrender.com/chat", {
+      const r = await fetch("http://localhost:5000/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -3492,18 +3513,41 @@ const ChatV = ({ data, user }) => {
 };
 
 /* ══ Root ══ */
-export default function Mansik() {
-  const [user, setUser] = useState(null),
+export default function Mansik({ firebaseUser }) {
+  const [user, setUser] = useState(
+    firebaseUser ? { name: firebaseUser.email.split("@")[0], email: firebaseUser.email } : null
+  ),
     [view, setView] = useState("dash"),
     [data, setData] = useState(HIST);
   const [persona, setPersona] = useState({
-    Health: ["Sleep", "Fitness"],
-    Habit: ["Journaling", "Meditation"],
-    Relationship: ["Family", "Friends"],
-    Occupation: ["IT Professional"],
-    Entertainment: ["Traveling"],
-    Liability: ["Work Pressure"],
+    Health: [],
+    Habit: [],
+    Relationship: [],
+    Occupation: [],
+    Entertainment: [],
+    Liability: [],
   });
+  const [isPersonaLoaded, setIsPersonaLoaded] = useState(false);
+
+  useEffect(() => {
+    if (user?.email) {
+      const saved = localStorage.getItem(`mansik_persona_${user.email}`);
+      if (saved) {
+        try {
+          setPersona(JSON.parse(saved));
+        } catch (e) {
+          console.error("Failed to parse persona", e);
+        }
+      }
+      setIsPersonaLoaded(true);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (user?.email && isPersonaLoaded) {
+      localStorage.setItem(`mansik_persona_${user.email}`, JSON.stringify(persona));
+    }
+  }, [persona, user, isPersonaLoaded]);
   const addA = (a) => {
     setData((p) => [...p, a]);
     setView("analytics");
@@ -3535,7 +3579,9 @@ export default function Mansik() {
           setView={setView}
           user={user}
           latest={lat}
-          onLogout={() => setUser(null)}
+          onLogout={() => {
+            signOut(auth).then(() => setUser(null));
+          }}
         />
         <main
           style={{

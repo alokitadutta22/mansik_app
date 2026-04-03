@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+
+<html class="scroll-smooth" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mansik Wellness | Modern Sanctuary</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;600;700&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-tertiary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "surface-bright": "#f9f9f7",
+                        "secondary": "#516600",
+                        "tertiary-container": "#212f19",
+                        "surface-variant": "#e2e3e1",
+                        "surface-container": "#eeeeec",
+                        "primary-container": "#19301e",
+                        "on-primary-fixed": "#09200f",
+                        "inverse-surface": "#2f3130",
+                        "on-secondary-fixed": "#171e00",
+                        "on-primary-fixed-variant": "#344c38",
+                        "surface-container-low": "#f4f4f2",
+                        "outline": "#737972",
+                        "tertiary-fixed-dim": "#bbccac",
+                        "tertiary": "#0d1a06",
+                        "on-secondary-container": "#576c04",
+                        "error": "#ba1a1a",
+                        "error-container": "#ffdad6",
+                        "inverse-primary": "#b2ceb3",
+                        "secondary-fixed-dim": "#b7d165",
+                        "inverse-on-surface": "#f1f1ef",
+                        "tertiary-fixed": "#d7e8c7",
+                        "outline-variant": "#c3c8c0",
+                        "on-tertiary-fixed": "#121f0a",
+                        "on-primary": "#ffffff",
+                        "surface-tint": "#4c644f",
+                        "secondary-fixed": "#d3ee7e",
+                        "on-surface-variant": "#434842",
+                        "on-error-container": "#93000a",
+                        "on-background": "#1a1c1b",
+                        "background": "#f9f9f7",
+                        "on-tertiary-container": "#87977a",
+                        "on-secondary-fixed-variant": "#3d4d00",
+                        "on-secondary": "#ffffff",
+                        "secondary-container": "#d3ee7e",
+                        "surface-dim": "#dadad8",
+                        "surface-container-highest": "#e2e3e1",
+                        "surface": "#f9f9f7",
+                        "primary-fixed-dim": "#b2ceb3",
+                        "surface-container-high": "#e8e8e6",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed-variant": "#3c4b33",
+                        "on-primary-container": "#7f9981",
+                        "on-surface": "#1a1c1b",
+                        "primary": "#041b0b",
+                        "primary-fixed": "#ceeacf"
+                    },
+                    fontFamily: {
+                        "headline": ["Noto Serif"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-header {
+            background: rgba(249, 249, 247, 0.8);
+            backdrop-filter: blur(20px);
+        }
+        .hero-gradient {
+            background: linear-gradient(to bottom, rgba(249, 249, 247, 0) 0%, #f9f9f7 100%);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body selection:bg-secondary-fixed selection:text-on-secondary-fixed">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#f9f9f7]/80 backdrop-blur-md flex justify-between items-center px-6 h-20 w-full shadow-[0px_20px_40px_rgba(4,27,11,0.04)]">
+<div class="flex items-center gap-8">
+<span class="text-2xl font-['Noto_Serif'] font-bold text-[#041b0b]">Mansik</span>
+<nav class="hidden md:flex gap-8 items-center">
+<a class="text-[#041b0b] font-bold font-['Noto_Serif'] tracking-tight duration-300 ease-in-out hover:opacity-80 transition-opacity" href="#">Home</a>
+<a class="text-[#041b0b]/60 font-['Noto_Serif'] tracking-tight duration-300 ease-in-out hover:opacity-80 transition-opacity" href="#">Insights</a>
+<a class="text-[#041b0b]/60 font-['Noto_Serif'] tracking-tight duration-300 ease-in-out hover:opacity-80 transition-opacity" href="#">AI Companion</a>
+<a class="text-[#041b0b]/60 font-['Noto_Serif'] tracking-tight duration-300 ease-in-out hover:opacity-80 transition-opacity" href="#">Guidance</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-[#041b0b] p-2 rounded-full hover:bg-surface-container transition-colors">account_circle</button>
+</div>
+</header>
+<main class="pt-20">
+<!-- Hero Section -->
+<section class="relative min-h-[921px] flex items-center px-6 overflow-hidden">
+<div class="absolute inset-0 z-0">
+<img class="w-full h-full object-cover" data-alt="misty mountain range at sunrise with soft atmospheric lighting and ethereal clouds in a serene minimalist composition" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCH2fg_3AUMFdL0apHwDLUVI2dBHp9SapmNXJhlvdO-1_uST2zj8_4Y-J2g5qleCSBL8-xOsiITswi3DI8C5JbNs9fA91PbZouTzd6N6yAWq6ZIQXIRxk-XQ3ilEg2oLjMvrvrWdnlJGAbp6-DNkJITB0nBl5ksIqBZsfP6jVwYIgturtqcCouyjuJo7xqzmf9fwyJX3pjZzmMsC4Wt76LpWgPoaZe9tV5q3slyfYV_JA0QOKKxxFiYQcMn019ujWMFqHJ2WTdHXFk"/>
+<div class="absolute inset-0 hero-gradient"></div>
+</div>
+<div class="relative z-10 max-w-4xl mx-auto text-center space-y-8">
+<span class="uppercase tracking-[0.3em] text-xs font-semibold text-primary opacity-60">The Modern Sanctuary</span>
+<h1 class="text-6xl md:text-8xl font-headline font-bold text-primary tracking-tight leading-[1.1]">
+                    Restore your inner <br/><span class="italic font-normal">stillness.</span>
+</h1>
+<p class="text-xl text-on-surface-variant max-w-2xl mx-auto leading-relaxed">
+                    A premium digital retreat designed to harmonise your mental landscape through scientific precision and gentle guidance.
+                </p>
+<div class="pt-4">
+<button class="bg-primary text-on-primary px-10 py-5 rounded-full text-lg font-medium shadow-[0px_20px_40px_rgba(4,27,11,0.1)] hover:scale-105 transition-transform">
+                        Get Started
+                    </button>
+</div>
+</div>
+</section>
+<!-- Intro Section -->
+<section class="py-32 px-6 bg-surface">
+<div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-24 items-center">
+<div class="space-y-6">
+<h2 class="text-4xl md:text-5xl font-headline font-bold text-primary leading-tight">
+                        A sanctuary built for <br/>cognitive clarity.
+                    </h2>
+<p class="text-lg text-on-surface-variant leading-relaxed">
+                        In an age of constant noise, Mansik provides the silence. We combine ancient wisdom with longitudinal data tracking to offer a personalized path to wellness that respects your pace.
+                    </p>
+<div class="pt-4">
+<a class="text-primary font-semibold border-b-2 border-secondary-fixed pb-1 hover:border-primary transition-all" href="#">Explore our methodology</a>
+</div>
+</div>
+<div class="relative">
+<div class="aspect-[4/5] rounded-[2.5rem] overflow-hidden shadow-2xl">
+<img class="w-full h-full object-cover" data-alt="minimalist interior of a meditation room with soft linen textures and a single branch in a ceramic vase" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAGglJmfMF-YzAHSVLgLXLSQ4K_WOkWArPgxR3nSnOuJfg8jky2N-F86nFsAEEo2p8AN5_Yyi1B6mdManXwaKL47KptA5olM7Xc4CMHp_mUnR2_tFwuJ9ON0l9K6gbTYc7UkmqE9sjBom3qQ13HUZPyddY9zsvXeHhPUt07tTNDazeXF04HHAAKxekzG8_Hbk07MZkvvPsrdlrRPPO4wKjU4uC2s3AQziMDN-RdGLWIW4_QA4YL2b2TvMdIxChqN9dnqBEBjzZ1_54"/>
+</div>
+<div class="absolute -bottom-10 -left-10 bg-surface-container-lowest p-8 rounded-2xl shadow-xl max-w-xs hidden lg:block">
+<p class="text-sm font-medium text-secondary italic">"The quietest app on my phone. It truly feels like a breath of fresh air."</p>
+<p class="mt-2 text-xs opacity-50 uppercase tracking-widest">— Sarah J., Founder</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Features Bento Grid -->
+<section class="py-32 px-6 bg-surface-container-low">
+<div class="max-w-7xl mx-auto">
+<div class="text-center mb-20 space-y-4">
+<h2 class="text-4xl font-headline font-bold text-primary">Core Pillars of Wellbeing</h2>
+<p class="text-on-surface-variant">Sophisticated tools for the conscious mind.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+<!-- Feature 1: Psychometric -->
+<div class="md:col-span-7 bg-surface-container-lowest rounded-[2rem] overflow-hidden group hover:shadow-2xl transition-all duration-500">
+<div class="p-10 flex flex-col justify-between h-full">
+<div class="space-y-4">
+<span class="material-symbols-outlined text-4xl text-primary">analytics</span>
+<h3 class="text-3xl font-headline font-bold">Psychometric stress assessment</h3>
+<p class="text-on-surface-variant leading-relaxed max-w-md">Scientifically validated evaluations to map your cognitive load and emotional baseline with medical-grade precision.</p>
+</div>
+<div class="mt-8 overflow-hidden rounded-xl aspect-video">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" data-alt="abstract data visualization with soft glowing lines and organic shapes on a dark forest green background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAZ0jBjUUez-q4AEd7QcyFuYw11VfOiIeqi-Rosnt7FBZIcr9L6IUmbENcxRbiR-TNKALNiT2vl6WZJzaBK3TXuZPpz5eNYJcYL0uFunTifuTP2iM01ppKAd0rCWtAGkeiWXHVpsi_X4-sgNWDSXi2ZoWHdGGcUvKcBfW93frskm4EW3HewAZrBcEtPuNA3g2142dXoNmSsl7DSij1JSX-yDxmAMlrilh-0MnIXctYLZL8thtuxkALaRPdkWAu4Z75x7SM2iPRf76k"/>
+</div>
+</div>
+</div>
+<!-- Feature 2: AI Companion -->
+<div class="md:col-span-5 bg-primary text-on-primary rounded-[2rem] overflow-hidden group hover:shadow-2xl transition-all duration-500">
+<div class="p-10 flex flex-col justify-between h-full">
+<div class="space-y-4">
+<span class="material-symbols-outlined text-4xl text-secondary-fixed">psychology</span>
+<h3 class="text-3xl font-headline font-bold">Gentle AI companion</h3>
+<p class="text-on-primary/70 leading-relaxed">An empathetic intelligence that listens, learns, and supports your journey without judgment or interruption.</p>
+</div>
+<div class="mt-12 flex justify-center">
+<div class="w-48 h-48 rounded-full border border-on-primary/20 flex items-center justify-center relative">
+<div class="w-32 h-32 rounded-full bg-secondary-fixed/20 animate-pulse"></div>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-5xl text-secondary-fixed" data-weight="fill">bubble_chart</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Feature 3: Longitudinal Insights -->
+<div class="md:col-span-5 bg-surface-container-lowest rounded-[2rem] overflow-hidden group hover:shadow-2xl transition-all duration-500">
+<div class="p-10 flex flex-col h-full">
+<div class="space-y-4 mb-8">
+<span class="material-symbols-outlined text-4xl text-primary">timeline</span>
+<h3 class="text-3xl font-headline font-bold">Longitudinal insights</h3>
+<p class="text-on-surface-variant leading-relaxed">Track subtle shifts in your mental state over seasons, identifying patterns that standard tracking misses.</p>
+</div>
+<img class="w-full h-64 object-cover rounded-xl mt-auto" data-alt="minimalist graph showing soft curving lines on high-quality cream paper texture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUtiyXXb6kzuQo4f_xGMZfaLETro6y2KkOVzPXKoqEUDh4U1BmQSiHkQ9OOqgEUiJ9LBnUeDdPelK-PldffrPehDcCM75hNhByA-aSEPtS6WT_6Gs_jxd5xUJ6iN6KSYef4ny2q5s3VR49BpDJHf8olN-QC7iVSIyZz4P0f73FyYefCuybb__mnYm5UdSW6LAa8sJayIouAcyB9tPMvsiFFBHsB7MbV_BnEwJQqzl-FjbWrY_hKEyLQiuJgNotLy4qmdAH_C3ySiY"/>
+</div>
+</div>
+<!-- Feature 4: Lifestyle Guidance -->
+<div class="md:col-span-7 bg-tertiary-fixed text-on-tertiary-fixed rounded-[2rem] overflow-hidden group hover:shadow-2xl transition-all duration-500">
+<div class="p-10 grid grid-cols-1 md:grid-cols-2 gap-8 items-center h-full">
+<div class="space-y-4">
+<span class="material-symbols-outlined text-4xl">spa</span>
+<h3 class="text-3xl font-headline font-bold">Personalised lifestyle guidance</h3>
+<p class="opacity-70 leading-relaxed">Actionable, small-step rituals curated for your specific temperament and environment.</p>
+<button class="bg-primary text-on-primary px-6 py-3 rounded-full text-sm font-medium mt-4">Begin Assessment</button>
+</div>
+<div class="rounded-2xl overflow-hidden aspect-square">
+<img class="w-full h-full object-cover" data-alt="close up of tea being poured into a ceramic cup with steam rising in a sunlit kitchen" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAyuYaBLeaw0519GS6Y8shCvXnO7dduzeQg2rfsiQtX1fd1Cd_K2fZlT-UcPuS2_Eu9YafHOt8kYUrEhiLbZFjBuYCkstkTjucK1aveFcqQPmVKtU2mCfWKj79biJMpqDa1trmh3DnNAJJF3B-ysoZnTTSVzwxGMOimVNFubmFRCheAzhvhGFySeSwItF4nl6qpLZI_L03BIkQJ2P9KQuig_3RJEMvGyYBegdxW3LlFPiIJA8qlMzM0LOtxYy3VlI2EslIn6DUEhbU"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- CTA Section -->
+<section class="py-32 px-6 bg-surface">
+<div class="max-w-4xl mx-auto bg-primary-container text-on-primary-container rounded-[3rem] p-16 text-center space-y-8 relative overflow-hidden">
+<div class="absolute top-0 right-0 w-64 h-64 bg-secondary-fixed/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+<h2 class="text-4xl md:text-5xl font-headline font-bold text-white relative z-10">Start your journey to stillness today.</h2>
+<p class="text-lg opacity-80 max-w-xl mx-auto relative z-10">Join over 50,000 individuals who have found their sanctuary in Mansik Wellness.</p>
+<div class="relative z-10">
+<button class="bg-secondary-fixed text-on-secondary-fixed px-12 py-5 rounded-full text-lg font-bold hover:bg-white transition-colors">
+                        Enter the Sanctuary
+                    </button>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full py-12 px-6 mt-auto bg-[#f4f4f2] dark:bg-stone-950 font-['Inter'] text-xs tracking-wide">
+<div class="flex flex-col md:flex-row justify-between items-center gap-4 max-w-7xl mx-auto">
+<div class="flex flex-col items-center md:items-start gap-2">
+<span class="text-lg font-['Noto_Serif'] text-[#041b0b] dark:text-[#f4f4f2]">Mansik</span>
+<p class="text-[#041b0b]/40 dark:text-[#f4f4f2]/40">© 2024 Mansik Wellness. Crafted for serenity.</p>
+</div>
+<div class="flex gap-8">
+<a class="text-[#041b0b]/40 dark:text-[#f4f4f2]/40 hover:text-[#19301e] transition-colors" href="#">Privacy</a>
+<a class="text-[#041b0b]/40 dark:text-[#f4f4f2]/40 hover:text-[#19301e] transition-colors" href="#">Terms</a>
+<a class="text-[#041b0b]/40 dark:text-[#f4f4f2]/40 hover:text-[#19301e] transition-colors" href="#">Support</a>
+</div>
+</div>
+</footer>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full h-24 flex justify-around items-center px-4 pb-safe bg-[#f9f9f7]/80 backdrop-blur-md z-50 rounded-t-[1.5rem] shadow-[0px_-10px_30px_rgba(4,27,11,0.03)]">
+<div class="flex flex-col items-center justify-center text-[#041b0b] bg-[#f4f4f2] rounded-full px-4 py-2 scale-95 transition-transform">
+<span class="material-symbols-outlined">home</span>
+<span class="font-['Inter'] text-[10px] font-medium uppercase tracking-widest mt-1">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#041b0b]/50 px-4 py-2 hover:text-[#041b0b] transition-colors scale-95 transition-transform">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-['Inter'] text-[10px] font-medium uppercase tracking-widest mt-1">Insights</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#041b0b]/50 px-4 py-2 hover:text-[#041b0b] transition-colors scale-95 transition-transform">
+<span class="material-symbols-outlined">psychology</span>
+<span class="font-['Inter'] text-[10px] font-medium uppercase tracking-widest mt-1">AI</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#041b0b]/50 px-4 py-2 hover:text-[#041b0b] transition-colors scale-95 transition-transform">
+<span class="material-symbols-outlined">spa</span>
+<span class="font-['Inter'] text-[10px] font-medium uppercase tracking-widest mt-1">Guidance</span>
+</div>
+</nav>
+</body></html>
