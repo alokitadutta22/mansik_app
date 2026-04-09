@@ -3165,7 +3165,7 @@ const ChatV = ({ data, user }) => {
     )
       setEsc(true);
     try {
-      const r = await fetch("http://localhost:5000/chat", {
+      const r = await fetch("/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
