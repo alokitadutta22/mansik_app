@@ -1,0 +1,541 @@
+/* ═══════════════════════════════════════════
+   STHIR-MANN LANDING PAGE STYLES
+   ═══════════════════════════════════════════ */
+
+:root {
+  --sage: #9CAF88;
+  --mint: #B8D4C8;
+  --cream: #F5F1E8;
+  --sand: #E8DCC4;
+  --clay: #C4A68A;
+  --earth: #8B7355;
+  --deep: #4A5F5C;
+  --text: #3D4F4C;
+  --light-text: #6B7B78;
+}
+
+.landing-page {
+  font-family: 'Poppins', sans-serif;
+  overflow-x: hidden;
+  background: var(--cream);
+  color: var(--text);
+  scroll-behavior: smooth;
+  animation: fadeIn 1s ease;
+}
+
+/* Minimal Navigation */
+.landing-nav {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  padding: 1.5rem 6%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(245, 241, 232, 0.9);
+  backdrop-filter: blur(20px);
+  z-index: 1000;
+  transition: all 0.4s ease;
+}
+
+.landing-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--deep);
+  letter-spacing: 1px;
+}
+
+.nav-cta {
+  padding: 0.7rem 1.8rem;
+  background: var(--sage);
+  border: none;
+  border-radius: 25px;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(156, 175, 136, 0.3);
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.95rem;
+}
+
+.nav-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(156, 175, 136, 0.4);
+}
+
+/* Chapter Sections */
+.chapter {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6rem 6%;
+  position: relative;
+}
+
+.chapter-1 {
+  background: linear-gradient(135deg, var(--cream) 0%, var(--sand) 100%);
+}
+
+.chapter-content {
+  max-width: 1200px;
+  opacity: 0;
+  transform: translateY(50px);
+  transition: all 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.chapter-content.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.chapter-number {
+  font-size: 0.85rem;
+  letter-spacing: 3px;
+  color: var(--earth);
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+.chapter-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 3.5rem;
+  font-weight: 600;
+  color: var(--deep);
+  line-height: 1.3;
+  margin-bottom: 2rem;
+  max-width: 800px;
+}
+
+.chapter-text {
+  font-size: 1.15rem;
+  line-height: 1.9;
+  color: var(--light-text);
+  max-width: 700px;
+  margin-bottom: 2rem;
+}
+
+.quote {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.4rem;
+  font-style: italic;
+  color: var(--earth);
+  border-left: 3px solid var(--sage);
+  padding-left: 2rem;
+  margin: 3rem 0;
+  max-width: 600px;
+}
+
+/* Floating Illustration */
+.illustration {
+  position: absolute;
+  opacity: 0.15;
+  animation: breathe 6s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1) translateY(0); }
+  50% { transform: scale(1.05) translateY(-10px); }
+}
+
+.illustration-1 {
+  right: 10%;
+  top: 20%;
+  font-size: 15rem;
+  color: var(--sage);
+}
+
+/* Chapter 2 */
+.chapter-2 {
+  background: linear-gradient(135deg, var(--mint) 0%, var(--cream) 100%);
+}
+
+.signs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  margin-top: 4rem;
+}
+
+.sign-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  padding: 2rem;
+  border-radius: 20px;
+  border: 1px solid rgba(156, 175, 136, 0.2);
+  transition: all 0.4s ease;
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+.sign-card.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.sign-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(156, 175, 136, 0.2);
+}
+
+.sign-icon {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, var(--sage) 0%, var(--mint) 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 5px 15px rgba(156, 175, 136, 0.3);
+}
+
+.sign-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--deep);
+  margin-bottom: 0.8rem;
+}
+
+.sign-desc {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--light-text);
+}
+
+/* Chapter 3 */
+.chapter-3 {
+  background: linear-gradient(135deg, var(--sand) 0%, var(--cream) 100%);
+}
+
+.journey-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 4rem;
+  margin-top: 4rem;
+  position: relative;
+}
+
+.journey-steps::before {
+  content: '';
+  position: absolute;
+  left: 30px;
+  top: 60px;
+  bottom: 60px;
+  width: 2px;
+  background: linear-gradient(180deg, var(--sage) 0%, var(--mint) 100%);
+}
+
+.step {
+  display: flex;
+  gap: 3rem;
+  align-items: flex-start;
+  opacity: 0;
+  transform: translateX(-30px);
+  transition: all 0.8s ease;
+}
+
+.step.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.step-number {
+  min-width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, var(--sage) 0%, var(--mint) 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+  font-weight: 700;
+  box-shadow: 0 5px 20px rgba(156, 175, 136, 0.4);
+  position: relative;
+  z-index: 10;
+}
+
+.step-content {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(10px);
+  padding: 2rem;
+  border-radius: 20px;
+  border: 1px solid rgba(156, 175, 136, 0.2);
+}
+
+.step-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.6rem;
+  color: var(--deep);
+  margin-bottom: 1rem;
+}
+
+.step-desc {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--light-text);
+}
+
+/* Chapter 4 */
+.chapter-4 {
+  background: linear-gradient(135deg, var(--cream) 0%, var(--mint) 100%);
+}
+
+.balance-visual {
+  margin-top: 4rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 3rem;
+  flex-wrap: wrap;
+}
+
+.pillar {
+  text-align: center;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.6s ease;
+}
+
+.pillar.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.pillar-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--sage) 0%, var(--mint) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  font-size: 2.5rem;
+  color: white;
+  box-shadow: 0 10px 30px rgba(156, 175, 136, 0.3);
+  transition: all 0.3s ease;
+}
+
+.pillar:hover .pillar-circle {
+  transform: translateY(-10px) rotate(5deg);
+  box-shadow: 0 15px 40px rgba(156, 175, 136, 0.4);
+}
+
+.pillar-name {
+  font-weight: 600;
+  color: var(--deep);
+  font-size: 1rem;
+}
+
+/* Chapter 5 */
+.chapter-5 {
+  background: linear-gradient(135deg, var(--sage) 0%, var(--mint) 100%);
+  color: white;
+  text-align: center;
+}
+
+.chapter-5 .chapter-title,
+.chapter-5 .chapter-text {
+  color: white;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.cta-group {
+  margin-top: 3rem;
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn-primary {
+  padding: 1rem 2.5rem;
+  background: white;
+  border: none;
+  border-radius: 30px;
+  color: var(--sage);
+  font-weight: 600;
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+  font-family: 'Poppins', sans-serif;
+}
+
+.btn-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+.btn-secondary {
+  padding: 1rem 2.5rem;
+  background: transparent;
+  border: 2px solid white;
+  border-radius: 30px;
+  color: white;
+  font-weight: 600;
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'Poppins', sans-serif;
+}
+
+.btn-secondary:hover {
+  background: white;
+  color: var(--sage);
+}
+
+/* Testimonial */
+.testimonial {
+  margin-top: 4rem;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.testimonial-text {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.2rem;
+  font-style: italic;
+  line-height: 1.8;
+  margin-bottom: 1.5rem;
+}
+
+.testimonial-author {
+  font-size: 0.95rem;
+  opacity: 0.9;
+}
+
+/* Footer */
+.landing-footer {
+  padding: 3rem 6%;
+  background: var(--deep);
+  color: rgba(255, 255, 255, 0.8);
+  text-align: center;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.footer-quote {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem;
+  font-style: italic;
+  margin-bottom: 2rem;
+}
+
+.footer-links {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.footer-links a {
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  transition: color 0.3s ease;
+  cursor: pointer;
+}
+
+.footer-links a:hover {
+  color: white;
+}
+
+/* Scroll Indicator */
+.scroll-indicator {
+  position: fixed;
+  bottom: 3rem;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: bounce 2s infinite;
+  color: var(--earth);
+  font-size: 2rem;
+  opacity: 0.6;
+  z-index: 100;
+  transition: opacity 0.3s ease;
+  cursor: pointer;
+}
+
+.scroll-indicator.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+  40% { transform: translateX(-50%) translateY(-10px); }
+  60% { transform: translateX(-50%) translateY(-5px); }
+}
+
+/* Breathing Circle */
+.breathing-circle {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--mint) 0%, transparent 70%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+  z-index: -1;
+}
+
+/* Peaceful entrance */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .chapter-title {
+    font-size: 2.2rem;
+  }
+  .chapter-text, .quote {
+    font-size: 1rem;
+  }
+  .illustration-1 {
+    font-size: 8rem;
+    right: -5%;
+  }
+  .journey-steps::before {
+    display: none;
+  }
+  .step {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .balance-visual {
+    gap: 1.5rem;
+  }
+  .pillar-circle {
+    width: 90px;
+    height: 90px;
+    font-size: 2rem;
+  }
+  .nav-cta {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+  }
+}
