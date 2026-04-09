@@ -1,4 +1,4 @@
-# 🧠 Mansik (Sthir-Mann)
+# 🧠 MANSik
 > *A gentle digital sanctuary for your mental wellness.*
 
 Mansik is a mindful wellness application designed to help users track their emotional landscape, assess their stress levels, and find balance through gentle, personalized guidance and AI companionship. It offers a safe, unhurried space to reflect on the invisible weight we carry every day.
