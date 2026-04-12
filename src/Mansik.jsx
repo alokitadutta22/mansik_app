@@ -2087,8 +2087,8 @@ const Assess = ({ onSubmit, data }) => {
 };
 
 /* ── Analytics ── */
-const Anlyt = ({ data }) => {
-  if (!data.length)
+const Anlyt = ({ data, chatMood = [] }) => {
+  if (!data.length && !chatMood.length)
     return (
       <div
         style={{
@@ -2119,7 +2119,7 @@ const Anlyt = ({ data }) => {
             Your story is yet to begin
           </div>
           <p style={{ fontSize: 13, fontStyle: "italic", marginTop: 7 }}>
-            Complete a PSS-14 assessment to see your insights.
+            Complete a PSS-14 assessment or chat with Manas to see your insights.
           </p>
         </div>
       </div>
@@ -2153,13 +2153,23 @@ const Anlyt = ({ data }) => {
     m20: 20,
     m38: 38,
   }));
+  // Merge chat mood signals into timeline
+  const chatLineD = chatMood.map(m => ({
+    date: fd(m.date),
+    chatScore: m.sentimentScore,
+    m20: 20,
+    m38: 38,
+  }));
+  // Combined timeline: assessment + chat
+  const combinedLine = [...lineD.map(d => ({ ...d, chatScore: null })), ...chatLineD.map(d => ({ ...d, score: null, avg: null }))]
+    .sort((a, b) => a.date.localeCompare(b.date));
   const radar = [
     { s: "Consistency", v: Math.min(100, data.length * 12) },
     { s: "Stability", v: trend === "Stable" ? 85 : 45 },
     { s: "Improvement", v: chg < 0 ? 80 : 40 },
-    { s: "Awareness", v: 75 },
+    { s: "Awareness", v: Math.min(100, 50 + chatMood.length * 5) },
     { s: "Resilience", v: avg < 25 ? 80 : avg < 38 ? 55 : 30 },
-    { s: "Engagement", v: Math.min(100, data.length * 10) },
+    { s: "Engagement", v: Math.min(100, (data.length + chatMood.length) * 8) },
   ];
   const CT = ({ active, payload }) =>
     active && payload?.length ? (
@@ -2356,7 +2366,7 @@ const Anlyt = ({ data }) => {
             Dashed lines mark Moderate (20) and High (38) thresholds
           </p>
           <ResponsiveContainer width="100%" height={240}>
-            <LineChart data={lineD}>
+            <LineChart data={combinedLine.length > lineD.length ? combinedLine : lineD}>
               <CartesianGrid
                 strokeDasharray="3 3"
                 stroke="rgba(200,170,150,.1)"
@@ -2377,7 +2387,20 @@ const Anlyt = ({ data }) => {
                 strokeWidth={2.5}
                 dot={{ fill: "var(--dusty)", r: 4, strokeWidth: 0 }}
                 name="PSS Score"
+                connectNulls={false}
               />
+              {chatMood.length > 0 && (
+                <Line
+                  type="monotone"
+                  dataKey="chatScore"
+                  stroke="#97AEC0"
+                  strokeWidth={2}
+                  strokeDasharray="5 3"
+                  dot={{ fill: "#97AEC0", r: 3, strokeWidth: 0 }}
+                  name="Chat Mood"
+                  connectNulls={false}
+                />
+              )}
               <Line
                 type="monotone"
                 dataKey="m20"
@@ -2488,6 +2511,48 @@ const Anlyt = ({ data }) => {
           })}
         </div>
       </div>
+
+      {/* Chat Sentiment Signals */}
+      {chatMood.length > 0 && (
+        <div className="paper fu" style={{ padding: "24px 22px", marginTop: 20 }}>
+          <div className="st" style={{ fontSize: 19, marginBottom: 4 }}>
+            Chat Sentiment Signals
+          </div>
+          <p style={{ fontSize: 11, color: "var(--mute)", fontStyle: "italic", marginBottom: 14 }}>
+            Emotional moments detected from your conversations with Manas
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {chatMood.slice().reverse().slice(0, 10).map((m, i) => {
+              const sColor = m.severity === "High" ? "#A8504A" : m.severity === "Moderate" ? "#A88040" : "#7A9A78";
+              return (
+                <div key={i} style={{
+                  display: "flex", alignItems: "center", gap: 12, padding: "10px 14px",
+                  borderRadius: 12, background: `${sColor}08`,
+                  border: `1px solid ${sColor}20`,
+                }}>
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: sColor, flexShrink: 0 }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      "{m.snippet || "Emotional message"}..."
+                    </div>
+                    <div style={{ fontSize: 10, color: "var(--mute)", fontStyle: "italic" }}>
+                      {new Date(m.date).toLocaleDateString("en-IN", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{
+                      fontFamily: "'Playfair Display',serif", fontSize: 18, fontWeight: 600, color: sColor
+                    }}>
+                      {m.sentimentScore}
+                    </span>
+                    <span className={`tag t${m.severity[0].toLowerCase()}`}>{m.severity}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -3608,7 +3673,17 @@ const RecsV = ({ data, persona }) => {
 };
 
 /* ── Chatbot (Manas) ── */
-const ChatV = ({ data, user, chatMsgs, setChatMsgs, activities, persona }) => {
+/* Sentiment keyword lists for chat mood signals */
+const CRISIS_WORDS = ["suicide", "end my life", "kill myself", "can't go on", "want to die", "self harm", "hurt myself", "no reason to live"];
+const NEG_WORDS = ["anxious", "panic", "depressed", "hopeless", "worthless", "alone", "scared", "terrified", "exhausted", "overwhelmed", "can't cope", "breaking down", "falling apart", "numb", "empty", "suffering", "miserable", "hate myself", "useless", "trapped", "helpless", "crying", "breakdown"];
+const classifySentiment = (text) => {
+  const t = text.toLowerCase();
+  if (CRISIS_WORDS.some(w => t.includes(w))) return { score: 48, level: "High", trigger: "crisis" };
+  if (NEG_WORDS.some(w => t.includes(w))) return { score: 30, level: "Moderate", trigger: "emotional" };
+  return null;// No signal for neutral messages
+};
+
+const ChatV = ({ data, user, chatMsgs, setChatMsgs, activities, persona, addChatMood }) => {
   const lat = data[data.length - 1];
   const defaultGreeting = {
     role: "assistant",
@@ -3618,6 +3693,22 @@ const ChatV = ({ data, user, chatMsgs, setChatMsgs, activities, persona }) => {
   const [inp, setInp] = useState(""),
     [busy, setBusy] = useState(false),
     [esc, setEsc] = useState(false);
+  // Nearby mental health centers
+  const [nearbyCenters, setNearbyCenters] = useState([]);
+  const [locStatus, setLocStatus] = useState("idle"); // idle | loading | granted | denied | error
+  const [showNearby, setShowNearby] = useState(false);
+  // Dynamically load Google Maps API
+  useEffect(() => {
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_KEY;
+    if (!apiKey || apiKey === "YOUR_GOOGLE_MAPS_API_KEY_HERE") return;
+    if (window.google?.maps) return; // already loaded
+    if (document.querySelector('script[src*="maps.googleapis.com"]')) return;
+    const script = document.createElement("script");
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&loading=async`;
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+  }, []);
   const chatEl = useRef(null);
   useEffect(() => {
     if (chatEl.current) chatEl.current.scrollTop = chatEl.current.scrollHeight;
@@ -3627,6 +3718,92 @@ const ChatV = ({ data, user, chatMsgs, setChatMsgs, activities, persona }) => {
   useEffect(() => {
     if (setChatMsgs && msgs.length > 0) setChatMsgs(msgs);
   }, [msgs]);
+
+  // Search nearby mental health centers via Google Maps Places API
+  const searchNearbyCenters = async () => {
+    if (locStatus === "loading" || nearbyCenters.length > 0) return;
+    setLocStatus("loading");
+    try {
+      const pos = await new Promise((resolve, reject) =>
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true, timeout: 10000, maximumAge: 60000
+        })
+      );
+      setLocStatus("granted");
+      const { latitude: lat2, longitude: lng2 } = pos.coords;
+      const apiKey = import.meta.env.VITE_GOOGLE_MAPS_KEY;
+      if (!apiKey || apiKey === "YOUR_GOOGLE_MAPS_API_KEY_HERE") {
+        setLocStatus("error");
+        return;
+      }
+      // Use Google Places Nearby Search REST API via proxy or direct
+      const queries = ["mental health clinic", "psychologist", "therapist", "counseling center"];
+      const allResults = [];
+      for (const q of queries.slice(0, 2)) {
+        try {
+          const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(q)}&location=${lat2},${lng2}&radius=10000&key=${apiKey}`;
+          // Since Places API has CORS restrictions, use the New Places API from JS SDK
+          // or fallback to the Nearby Search via the Maps JS library
+          if (window.google?.maps?.places) {
+            const { Place } = await window.google.maps.importLibrary("places");
+            const request = {
+              textQuery: q + " near me",
+              fields: ["displayName", "formattedAddress", "nationalPhoneNumber", "rating", "userRatingCount", "location", "googleMapsURI"],
+              locationBias: {
+                circle: { center: { lat: lat2, lng: lng2 }, radius: 10000 },
+              },
+              maxResultCount: 5,
+            };
+            const { places } = await Place.searchByText(request);
+            if (places) {
+              places.forEach(p => {
+                const dist = haversine(lat2, lng2, p.location?.lat(), p.location?.lng());
+                allResults.push({
+                  name: p.displayName,
+                  address: p.formattedAddress || "",
+                  phone: p.nationalPhoneNumber || "",
+                  rating: p.rating || 0,
+                  reviews: p.userRatingCount || 0,
+                  distance: dist,
+                  mapsUrl: p.googleMapsURI || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.displayName)}`,
+                });
+              });
+            }
+          }
+        } catch(e2) { console.warn("Places search error:", e2); }
+      }
+      // Dedupe by name
+      const seen = new Set();
+      const unique = allResults.filter(r => {
+        const k = r.name?.toLowerCase();
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      });
+      unique.sort((a, b) => a.distance - b.distance);
+      setNearbyCenters(unique.slice(0, 8));
+    } catch (err) {
+      if (err.code === 1) setLocStatus("denied");
+      else setLocStatus("error");
+    }
+  };
+
+  // Haversine distance (km)
+  const haversine = (lat1, lon1, lat2, lon2) => {
+    if (!lat2 || !lon2) return 999;
+    const R = 6371, dLat = (lat2 - lat1) * Math.PI / 180, dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  };
+
+  // National helplines fallback
+  const HELPLINES = [
+    { name: "iCall (TISS Mumbai)", phone: "9152987821", desc: "Mon-Sat, 8am-10pm", panIndia: true },
+    { name: "Vandrevala Foundation", phone: "1860-2662-345", desc: "24/7, All languages", panIndia: true },
+    { name: "NIMHANS Helpline", phone: "080-46110007", desc: "24/7 Mental Health", panIndia: true },
+    { name: "Snehi", phone: "044-24640050", desc: "24/7 Emotional Support", panIndia: true },
+    { name: "AASRA", phone: "9820466726", desc: "24/7 Crisis Intervention", panIndia: true },
+  ];
 
   // Build activity context for the AI
   const activityContext = (() => {
@@ -3712,19 +3889,30 @@ Important:
     const next = [...msgs, { role: "user", content: u }];
     setMsgs(next);
     setBusy(true);
-    const crisis = [
-      "suicide",
-      "end my life",
-      "kill myself",
-      "can't go on",
-      "want to die",
-    ].some((k) => u.toLowerCase().includes(k));
+
+    // Sentiment-based mood signal
+    const sentiment = classifySentiment(u);
+    if (sentiment && addChatMood) {
+      addChatMood({
+        date: new Date().toISOString(),
+        sentimentScore: sentiment.score,
+        severity: sentiment.level,
+        source: "chat",
+        trigger: sentiment.trigger,
+        snippet: u.slice(0, 60),
+      });
+    }
+
+    const crisis = CRISIS_WORDS.some((k) => u.toLowerCase().includes(k));
     if (
       crisis ||
       (lat?.severity === "High" &&
         data.slice(-3).every((a) => a.severity === "High"))
-    )
+    ) {
       setEsc(true);
+      setShowNearby(true);
+      searchNearbyCenters();
+    }
     try {
       const r = await fetch("/chat", {
         method: "POST",
@@ -3861,24 +4049,138 @@ Important:
       </div>
 
       {esc && (
-        <div
-          className="paper-b fu"
-          style={{
-            padding: "11px 17px",
-            marginBottom: 12,
-            display: "flex",
-            gap: 9,
-            alignItems: "center",
-          }}
-        >
-          <Ico n="alert" s={18} c="var(--rose)" sw={1.8} />
-          <p
-            style={{ fontSize: 13, color: "var(--rose)", fontStyle: "italic" }}
+        <div className="fu" style={{ marginBottom: 12 }}>
+          {/* Crisis banner */}
+          <div
+            className="paper-b"
+            style={{
+              padding: "11px 17px",
+              marginBottom: 8,
+              display: "flex",
+              gap: 9,
+              alignItems: "center",
+            }}
           >
-            You are not alone. If you are in crisis, please reach out:{" "}
-            <strong>iCall 9152987821</strong> ·{" "}
-            <strong>Vandrevala 1860-2662-345</strong>
-          </p>
+            <Ico n="alert" s={18} c="var(--rose)" sw={1.8} />
+            <p
+              style={{ fontSize: 13, color: "var(--rose)", fontStyle: "italic", flex: 1 }}
+            >
+              You are not alone. If you are in crisis, please reach out:{" "}
+              <a href="tel:9152987821" style={{ color: "var(--rose)", fontWeight: 700, textDecoration: "none" }}>iCall 9152987821</a> ·{" "}
+              <a href="tel:18602662345" style={{ color: "var(--rose)", fontWeight: 700, textDecoration: "none" }}>Vandrevala 1860-2662-345</a>
+            </p>
+            <button data-h onClick={() => { setShowNearby(!showNearby); if (!showNearby) searchNearbyCenters(); }}
+              style={{
+                padding: "6px 14px", borderRadius: 20, fontSize: 11, fontFamily: "'Lora',serif",
+                border: "1.5px solid rgba(168,80,74,.35)", cursor: "pointer", flexShrink: 0,
+                background: showNearby ? "rgba(168,80,74,.12)" : "transparent",
+                color: "var(--rose)", transition: "all .3s",
+              }}
+            >
+              {showNearby ? "Hide" : "Find Nearby Help"}
+            </button>
+          </div>
+
+          {/* Nearby centers panel */}
+          {showNearby && (
+            <div className="paper" style={{ padding: "18px 20px", marginBottom: 4, maxHeight: 280, overflowY: "auto" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                <div className="st" style={{ fontSize: 15 }}>
+                  {locStatus === "loading" ? "Locating you..." :
+                   locStatus === "denied" ? "Location access denied" :
+                   nearbyCenters.length > 0 ? `${nearbyCenters.length} centers near you` :
+                   "Professional Help"}
+                </div>
+                {locStatus === "denied" && (
+                  <span style={{ fontSize: 11, color: "var(--mute)", fontStyle: "italic" }}>
+                    Enable location for nearby results
+                  </span>
+                )}
+              </div>
+
+              {/* Loading spinner */}
+              {locStatus === "loading" && (
+                <div style={{ textAlign: "center", padding: "16px 0", color: "var(--mute)", fontSize: 13 }}>
+                  <div style={{ width: 24, height: 24, border: "2.5px solid rgba(200,170,150,.25)", borderTopColor: "var(--rose)", borderRadius: "50%", margin: "0 auto 8px", animation: "spin 1s linear infinite" }} />
+                  Searching for mental health professionals near you...
+                </div>
+              )}
+
+              {/* Nearby results */}
+              {nearbyCenters.length > 0 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {nearbyCenters.map((c, i) => (
+                    <div key={i} style={{
+                      display: "flex", alignItems: "center", gap: 12, padding: "10px 14px",
+                      borderRadius: 12, background: "rgba(255,250,244,.7)",
+                      border: "1px solid rgba(200,170,150,.15)", transition: "all .3s",
+                    }}>
+                      <div style={{
+                        width: 36, height: 36, borderRadius: 10,
+                        background: "linear-gradient(135deg,rgba(168,80,74,.12),rgba(168,80,74,.06))",
+                        display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                      }}>
+                        <Ico n="brain" s={16} c="var(--rose)" sw={1.6} />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontFamily: "'Lora',serif", fontWeight: 500, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {c.name}
+                        </div>
+                        <div style={{ fontSize: 11, color: "var(--mute)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {c.address}
+                        </div>
+                        {c.phone && (
+                          <a href={`tel:${c.phone.replace(/[^0-9+]/g, "")}`} style={{ fontSize: 11, color: "var(--rose)", textDecoration: "none", fontWeight: 500 }}>
+                            📞 {c.phone}
+                          </a>
+                        )}
+                      </div>
+                      <div style={{ textAlign: "right", flexShrink: 0 }}>
+                        {c.rating > 0 && (
+                          <div style={{ fontSize: 12, color: "#A88040", fontWeight: 500 }}>
+                            ★ {c.rating.toFixed(1)} <span style={{ fontSize: 10, color: "var(--mute)" }}>({c.reviews})</span>
+                          </div>
+                        )}
+                        <div style={{ fontSize: 10, color: "var(--mute)" }}>{c.distance < 999 ? `${c.distance.toFixed(1)} km` : ""}</div>
+                        <a href={c.mapsUrl} target="_blank" rel="noopener noreferrer"
+                          style={{ fontSize: 10, color: "var(--rose)", textDecoration: "none" }}>
+                          Directions →
+                        </a>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Fallback helplines — always shown */}
+              <div style={{ marginTop: nearbyCenters.length > 0 ? 14 : 0 }}>
+                {(nearbyCenters.length === 0 || locStatus === "denied" || locStatus === "error") && (
+                  <div style={{ fontSize: 12, color: "var(--mute)", fontStyle: "italic", marginBottom: 8 }}>
+                    {locStatus === "denied" ? "Please enable location access in your browser to see nearby centers. Meanwhile, here are national helplines:" : "National helplines available 24/7:"}
+                  </div>
+                )}
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {HELPLINES.map((h, i) => (
+                    <div key={i} style={{
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                      padding: "8px 12px", borderRadius: 10,
+                      background: i === 0 ? "rgba(168,80,74,.08)" : "rgba(200,170,150,.06)",
+                      border: "1px solid rgba(200,170,150,.1)",
+                    }}>
+                      <div>
+                        <div style={{ fontSize: 12, fontWeight: 500, color: "var(--text)" }}>{h.name}</div>
+                        <div style={{ fontSize: 10, color: "var(--mute)", fontStyle: "italic" }}>{h.desc}</div>
+                      </div>
+                      <a href={`tel:${h.phone.replace(/[^0-9+]/g, "")}`}
+                        style={{ fontSize: 13, color: "var(--rose)", fontWeight: 600, textDecoration: "none", padding: "4px 12px", borderRadius: 16, background: "rgba(168,80,74,.1)" }}>
+                        📞 {h.phone}
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -4121,6 +4423,18 @@ export default function Mansik({ firebaseUser }) {
     return [];
   });
 
+  // ── Persisted chat mood signals ──
+  const [chatMood, setChatMood] = useState(() => {
+    if (firebaseUser?.email) {
+      try {
+        const saved = localStorage.getItem(`mansik_chatMood_${firebaseUser.email}`);
+        return saved ? JSON.parse(saved) : [];
+      } catch { return []; }
+    }
+    return [];
+  });
+  const addChatMood = (signal) => setChatMood(prev => [...prev, signal]);
+
   const [persona, setPersona] = useState({
     Health: [],
     Habit: [],
@@ -4166,6 +4480,13 @@ export default function Mansik({ firebaseUser }) {
     }
   }, [activities, user?.email]);
 
+  // Persist chat mood
+  useEffect(() => {
+    if (user?.email && chatMood.length > 0) {
+      localStorage.setItem(`mansik_chatMood_${user.email}`, JSON.stringify(chatMood));
+    }
+  }, [chatMood, user?.email]);
+
   // Load persona from localStorage
   useEffect(() => {
     if (user?.email) {
@@ -4203,9 +4524,9 @@ export default function Mansik({ firebaseUser }) {
   const views = {
     dash: <Dash user={user} data={data} persona={persona} />,
     assess: <Assess onSubmit={addA} data={data} />,
-    analytics: <Anlyt data={data} />,
+    analytics: <Anlyt data={data} chatMood={chatMood} />,
     persona: <Pers persona={persona} setPersona={setPersona} activities={activities} setActivities={setActivities} data={data} />,
-    chat: <ChatV data={data} user={user} chatMsgs={chatMsgs} setChatMsgs={setChatMsgs} activities={activities} persona={persona} />,
+    chat: <ChatV data={data} user={user} chatMsgs={chatMsgs} setChatMsgs={setChatMsgs} activities={activities} persona={persona} addChatMood={addChatMood} />,
     recs: <RecsV data={data} persona={persona} />,
   };
   return (
