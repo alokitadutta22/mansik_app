@@ -148,7 +148,7 @@ npm run lint      # Lint with ESLint
 ## 🔗 Live Demo
 
 ```
-https://mansik-app.vercel.app/
+https://mansik.onrender.com/
 ```
 
 
