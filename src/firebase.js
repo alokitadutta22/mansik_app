@@ -18,9 +18,8 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+export const db = getFirestore(app); // ← this line was missing
 
-// Ensure auth persists across tab close / browser restart
 setPersistence(auth, browserLocalPersistence).catch((err) =>
   console.error("Auth persistence error:", err),
 );
