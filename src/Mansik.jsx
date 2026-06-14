@@ -2,6 +2,17 @@ import { useState, useEffect, useRef } from "react";
 import { auth } from "./firebase";
 import { signOut } from "firebase/auth";
 import {
+  useAssessments,
+  usePersona,
+  useActivities,
+  useChatHistory,
+} from "./useDatabase";
+import {
+  hasLocalStorageData,
+  getLocalStorageData,
+  clearLocalStorageData,
+} from "./migrationUtils";
+import {
   AreaChart,
   Area,
   LineChart,
@@ -918,11 +929,7 @@ const Auth = ({ onAuth }) => {
                   }}
                 />
               )}
-              {busy
-                ? "One moment…"
-                : mode === "login"
-                  ? "Enter →"
-                  : "Begin →"}
+              {busy ? "One moment…" : mode === "login" ? "Enter →" : "Begin →"}
             </button>
           </div>
           <p
@@ -943,7 +950,15 @@ const Auth = ({ onAuth }) => {
 };
 
 /* ── Sidebar ── */
-const Sidebar = ({ view, setView, user, latest, displayName, setDisplayName, onLogout }) => {
+const Sidebar = ({
+  view,
+  setView,
+  user,
+  latest,
+  displayName,
+  setDisplayName,
+  onLogout,
+}) => {
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(displayName || user.name);
   const nameRef = useRef(null);
@@ -957,180 +972,198 @@ const Sidebar = ({ view, setView, user, latest, displayName, setDisplayName, onL
     setEditingName(false);
   };
   return (
-  <div
-    style={{
-      width: 228,
-      background:
-        "linear-gradient(180deg,rgba(247,240,232,.97),rgba(239,230,216,.97))",
-      borderRight: "1px solid rgba(200,170,150,.18)",
-      display: "flex",
-      flexDirection: "column",
-      height: "100vh",
-      position: "sticky",
-      top: 0,
-      overflowY: "auto",
-      backdropFilter: "blur(10px)",
-    }}
-  >
-    {/* Logo */}
     <div
       style={{
-        padding: "22px 20px 18px",
-        borderBottom: "1px solid rgba(200,170,150,.13)",
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <div
-          style={{
-            width: 34,
-            height: 34,
-            borderRadius: 10,
-            background:
-              "linear-gradient(135deg,rgba(232,200,194,.55),rgba(194,208,220,.45))",
-            border: "1px solid rgba(200,170,150,.25)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Ico n="brain" s={17} c="var(--rose)" sw={1.6} />
-        </div>
-        <div>
-          <div
-            style={{
-              fontFamily: "'Playfair Display',serif",
-              fontSize: 18,
-              color: "var(--brown)",
-              lineHeight: 1.1,
-            }}
-          >
-            Mansik
-          </div>
-          <div className="cv" style={{ fontSize: 11, color: "var(--mute)" }}>
-            मानसिक
-          </div>
-        </div>
-      </div>
-    </div>
-
-    {/* User with editable name */}
-    <div
-      style={{
-        padding: "14px 16px",
-        borderBottom: "1px solid rgba(200,170,150,.1)",
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-        <div
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: "50%",
-            background: "linear-gradient(135deg,var(--blush),var(--honey))",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontFamily: "'Playfair Display',serif",
-            fontSize: 16,
-            color: "var(--brown)",
-            fontWeight: 600,
-          }}
-        >
-          {(displayName || user.name)[0].toUpperCase()}
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          {editingName ? (
-            <input
-              ref={nameRef}
-              className="si"
-              style={{ padding: "4px 8px", fontSize: 13, borderRadius: 10, width: "100%" }}
-              value={nameInput}
-              onChange={(e) => setNameInput(e.target.value)}
-              onBlur={saveName}
-              onKeyDown={(e) => { if (e.key === "Enter") saveName(); if (e.key === "Escape") { setNameInput(displayName || user.name); setEditingName(false); } }}
-            />
-          ) : (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 5,
-                cursor: "pointer",
-              }}
-              data-h
-              onClick={() => { setNameInput(displayName || user.name); setEditingName(true); }}
-            >
-              <div
-                style={{
-                  fontSize: 13,
-                  fontFamily: "'Lora',serif",
-                  color: "var(--text)",
-                  fontWeight: 500,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {displayName || user.name}
-              </div>
-              <Ico n="pen" s={11} c="var(--mute)" sw={1.8} />
-            </div>
-          )}
-          <div
-            style={{ fontSize: 11, color: "var(--mute)", fontStyle: "italic" }}
-          >
-            {latest ? `${latest.severity} stress` : "No assessment yet"}
-          </div>
-        </div>
-      </div>
-    </div>
-
-    {/* Nav */}
-    <nav
-      style={{
-        flex: 1,
-        padding: "12px 10px",
+        width: 228,
+        background:
+          "linear-gradient(180deg,rgba(247,240,232,.97),rgba(239,230,216,.97))",
+        borderRight: "1px solid rgba(200,170,150,.18)",
         display: "flex",
         flexDirection: "column",
-        gap: 2,
+        height: "100vh",
+        position: "sticky",
+        top: 0,
+        overflowY: "auto",
+        backdropFilter: "blur(10px)",
       }}
     >
-      {NAV.map((n) => (
-        <div
-          key={n.id}
-          className={`nav-pill ${view === n.id ? "act" : ""}`}
-          data-h
-          onClick={() => setView(n.id)}
-        >
-          <Ico
-            n={n.ico}
-            s={16}
-            c={view === n.id ? "var(--rose)" : n.icoC}
-            sw={1.8}
-          />
-          <span>{n.l}</span>
-        </div>
-      ))}
-    </nav>
-
-    {/* Logout */}
-    <div
-      style={{
-        padding: "12px 10px",
-        borderTop: "1px solid rgba(200,170,150,.1)",
-      }}
-    >
+      {/* Logo */}
       <div
-        className="nav-pill"
-        data-h
-        onClick={onLogout}
-        style={{ color: "var(--rose)" }}
+        style={{
+          padding: "22px 20px 18px",
+          borderBottom: "1px solid rgba(200,170,150,.13)",
+        }}
       >
-        <Ico n="exit" s={16} c="var(--rose)" sw={1.8} />
-        Leave
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div
+            style={{
+              width: 34,
+              height: 34,
+              borderRadius: 10,
+              background:
+                "linear-gradient(135deg,rgba(232,200,194,.55),rgba(194,208,220,.45))",
+              border: "1px solid rgba(200,170,150,.25)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Ico n="brain" s={17} c="var(--rose)" sw={1.6} />
+          </div>
+          <div>
+            <div
+              style={{
+                fontFamily: "'Playfair Display',serif",
+                fontSize: 18,
+                color: "var(--brown)",
+                lineHeight: 1.1,
+              }}
+            >
+              Mansik
+            </div>
+            <div className="cv" style={{ fontSize: 11, color: "var(--mute)" }}>
+              मानसिक
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* User with editable name */}
+      <div
+        style={{
+          padding: "14px 16px",
+          borderBottom: "1px solid rgba(200,170,150,.1)",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+          <div
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: "50%",
+              background: "linear-gradient(135deg,var(--blush),var(--honey))",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontFamily: "'Playfair Display',serif",
+              fontSize: 16,
+              color: "var(--brown)",
+              fontWeight: 600,
+            }}
+          >
+            {(displayName || user.name)[0].toUpperCase()}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {editingName ? (
+              <input
+                ref={nameRef}
+                className="si"
+                style={{
+                  padding: "4px 8px",
+                  fontSize: 13,
+                  borderRadius: 10,
+                  width: "100%",
+                }}
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
+                onBlur={saveName}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") saveName();
+                  if (e.key === "Escape") {
+                    setNameInput(displayName || user.name);
+                    setEditingName(false);
+                  }
+                }}
+              />
+            ) : (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 5,
+                  cursor: "pointer",
+                }}
+                data-h
+                onClick={() => {
+                  setNameInput(displayName || user.name);
+                  setEditingName(true);
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 13,
+                    fontFamily: "'Lora',serif",
+                    color: "var(--text)",
+                    fontWeight: 500,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {displayName || user.name}
+                </div>
+                <Ico n="pen" s={11} c="var(--mute)" sw={1.8} />
+              </div>
+            )}
+            <div
+              style={{
+                fontSize: 11,
+                color: "var(--mute)",
+                fontStyle: "italic",
+              }}
+            >
+              {latest ? `${latest.severity} stress` : "No assessment yet"}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Nav */}
+      <nav
+        style={{
+          flex: 1,
+          padding: "12px 10px",
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+        }}
+      >
+        {NAV.map((n) => (
+          <div
+            key={n.id}
+            className={`nav-pill ${view === n.id ? "act" : ""}`}
+            data-h
+            onClick={() => setView(n.id)}
+          >
+            <Ico
+              n={n.ico}
+              s={16}
+              c={view === n.id ? "var(--rose)" : n.icoC}
+              sw={1.8}
+            />
+            <span>{n.l}</span>
+          </div>
+        ))}
+      </nav>
+
+      {/* Logout */}
+      <div
+        style={{
+          padding: "12px 10px",
+          borderTop: "1px solid rgba(200,170,150,.1)",
+        }}
+      >
+        <div
+          className="nav-pill"
+          data-h
+          onClick={onLogout}
+          style={{ color: "var(--rose)" }}
+        >
+          <Ico n="exit" s={16} c="var(--rose)" sw={1.8} />
+          Leave
+        </div>
       </div>
     </div>
-  </div>
   );
 };
 
@@ -2119,7 +2152,8 @@ const Anlyt = ({ data, chatMood = [] }) => {
             Your story is yet to begin
           </div>
           <p style={{ fontSize: 13, fontStyle: "italic", marginTop: 7 }}>
-            Complete a PSS-14 assessment or chat with Manas to see your insights.
+            Complete a PSS-14 assessment or chat with Manas to see your
+            insights.
           </p>
         </div>
       </div>
@@ -2154,15 +2188,17 @@ const Anlyt = ({ data, chatMood = [] }) => {
     m38: 38,
   }));
   // Merge chat mood signals into timeline
-  const chatLineD = chatMood.map(m => ({
+  const chatLineD = chatMood.map((m) => ({
     date: fd(m.date),
     chatScore: m.sentimentScore,
     m20: 20,
     m38: 38,
   }));
   // Combined timeline: assessment + chat
-  const combinedLine = [...lineD.map(d => ({ ...d, chatScore: null })), ...chatLineD.map(d => ({ ...d, score: null, avg: null }))]
-    .sort((a, b) => a.date.localeCompare(b.date));
+  const combinedLine = [
+    ...lineD.map((d) => ({ ...d, chatScore: null })),
+    ...chatLineD.map((d) => ({ ...d, score: null, avg: null })),
+  ].sort((a, b) => a.date.localeCompare(b.date));
   const radar = [
     { s: "Consistency", v: Math.min(100, data.length * 12) },
     { s: "Stability", v: trend === "Stable" ? 85 : 45 },
@@ -2366,7 +2402,9 @@ const Anlyt = ({ data, chatMood = [] }) => {
             Dashed lines mark Moderate (20) and High (38) thresholds
           </p>
           <ResponsiveContainer width="100%" height={240}>
-            <LineChart data={combinedLine.length > lineD.length ? combinedLine : lineD}>
+            <LineChart
+              data={combinedLine.length > lineD.length ? combinedLine : lineD}
+            >
               <CartesianGrid
                 strokeDasharray="3 3"
                 stroke="rgba(200,170,150,.1)"
@@ -2514,42 +2552,104 @@ const Anlyt = ({ data, chatMood = [] }) => {
 
       {/* Chat Sentiment Signals */}
       {chatMood.length > 0 && (
-        <div className="paper fu" style={{ padding: "24px 22px", marginTop: 20 }}>
+        <div
+          className="paper fu"
+          style={{ padding: "24px 22px", marginTop: 20 }}
+        >
           <div className="st" style={{ fontSize: 19, marginBottom: 4 }}>
             Chat Sentiment Signals
           </div>
-          <p style={{ fontSize: 11, color: "var(--mute)", fontStyle: "italic", marginBottom: 14 }}>
+          <p
+            style={{
+              fontSize: 11,
+              color: "var(--mute)",
+              fontStyle: "italic",
+              marginBottom: 14,
+            }}
+          >
             Emotional moments detected from your conversations with Manas
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {chatMood.slice().reverse().slice(0, 10).map((m, i) => {
-              const sColor = m.severity === "High" ? "#A8504A" : m.severity === "Moderate" ? "#A88040" : "#7A9A78";
-              return (
-                <div key={i} style={{
-                  display: "flex", alignItems: "center", gap: 12, padding: "10px 14px",
-                  borderRadius: 12, background: `${sColor}08`,
-                  border: `1px solid ${sColor}20`,
-                }}>
-                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: sColor, flexShrink: 0 }} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      "{m.snippet || "Emotional message"}..."
+            {chatMood
+              .slice()
+              .reverse()
+              .slice(0, 10)
+              .map((m, i) => {
+                const sColor =
+                  m.severity === "High"
+                    ? "#A8504A"
+                    : m.severity === "Moderate"
+                      ? "#A88040"
+                      : "#7A9A78";
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                      padding: "10px 14px",
+                      borderRadius: 12,
+                      background: `${sColor}08`,
+                      border: `1px solid ${sColor}20`,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: "50%",
+                        background: sColor,
+                        flexShrink: 0,
+                      }}
+                    />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div
+                        style={{
+                          fontSize: 13,
+                          color: "var(--text)",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        "{m.snippet || "Emotional message"}..."
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 10,
+                          color: "var(--mute)",
+                          fontStyle: "italic",
+                        }}
+                      >
+                        {new Date(m.date).toLocaleDateString("en-IN", {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </div>
                     </div>
-                    <div style={{ fontSize: 10, color: "var(--mute)", fontStyle: "italic" }}>
-                      {new Date(m.date).toLocaleDateString("en-IN", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                    <div
+                      style={{ display: "flex", alignItems: "center", gap: 8 }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: "'Playfair Display',serif",
+                          fontSize: 18,
+                          fontWeight: 600,
+                          color: sColor,
+                        }}
+                      >
+                        {m.sentimentScore}
+                      </span>
+                      <span className={`tag t${m.severity[0].toLowerCase()}`}>
+                        {m.severity}
+                      </span>
                     </div>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{
-                      fontFamily: "'Playfair Display',serif", fontSize: 18, fontWeight: 600, color: sColor
-                    }}>
-                      {m.sentimentScore}
-                    </span>
-                    <span className={`tag t${m.severity[0].toLowerCase()}`}>{m.severity}</span>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
           </div>
         </div>
       )}
@@ -2558,7 +2658,15 @@ const Anlyt = ({ data, chatMood = [] }) => {
 };
 
 /* ── Persona ── */
-const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const DAYS = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
 const DAY_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const todayName = () => {
   const d = new Date();
@@ -2568,25 +2676,37 @@ const todayStr = () => new Date().toISOString().split("T")[0];
 
 /* Pillar Analytics helper */
 const calcPillarStats = (activities, pillar) => {
-  const acts = activities.filter(a => a.pillar === pillar);
+  const acts = activities.filter((a) => a.pillar === pillar);
   if (!acts.length) return null;
-  let totalPlanned = 0, totalCompleted = 0, currentStreak = 0, longestStreak = 0;
-  const today = new Date(); 
+  let totalPlanned = 0,
+    totalCompleted = 0,
+    currentStreak = 0,
+    longestStreak = 0;
+  const today = new Date();
   const last14 = [];
   for (let i = 13; i >= 0; i--) {
-    const d = new Date(today); d.setDate(d.getDate() - i);
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
     last14.push(d.toISOString().split("T")[0]);
   }
   const weeklyRates = [];
   for (let w = 0; w < 2; w++) {
-    let wPlanned = 0, wDone = 0;
+    let wPlanned = 0,
+      wDone = 0;
     for (let d = 0; d < 7; d++) {
       const dateStr = last14[w * 7 + d];
-      const dayOfWeek = DAYS[new Date(dateStr).getDay() === 0 ? 6 : new Date(dateStr).getDay() - 1];
-      acts.forEach(act => {
+      const dayOfWeek =
+        DAYS[
+          new Date(dateStr).getDay() === 0 ? 6 : new Date(dateStr).getDay() - 1
+        ];
+      acts.forEach((act) => {
         if (act.days.includes(dayOfWeek)) {
-          wPlanned++; totalPlanned++;
-          if (act.completionLog?.[dateStr]) { wDone++; totalCompleted++; }
+          wPlanned++;
+          totalPlanned++;
+          if (act.completionLog?.[dateStr]) {
+            wDone++;
+            totalCompleted++;
+          }
         }
       });
     }
@@ -2595,34 +2715,68 @@ const calcPillarStats = (activities, pillar) => {
   // streak calc (last 14 days, most recent first)
   for (let i = last14.length - 1; i >= 0; i--) {
     const dateStr = last14[i];
-    const dayOfWeek = DAYS[new Date(dateStr).getDay() === 0 ? 6 : new Date(dateStr).getDay() - 1];
-    const dayPlanned = acts.filter(a => a.days.includes(dayOfWeek));
+    const dayOfWeek =
+      DAYS[
+        new Date(dateStr).getDay() === 0 ? 6 : new Date(dateStr).getDay() - 1
+      ];
+    const dayPlanned = acts.filter((a) => a.days.includes(dayOfWeek));
     if (!dayPlanned.length) continue;
-    const allDone = dayPlanned.every(a => a.completionLog?.[dateStr]);
-    if (allDone) { currentStreak++; longestStreak = Math.max(longestStreak, currentStreak); }
-    else break;
+    const allDone = dayPlanned.every((a) => a.completionLog?.[dateStr]);
+    if (allDone) {
+      currentStreak++;
+      longestStreak = Math.max(longestStreak, currentStreak);
+    } else break;
   }
   // activityStats
-  const actStats = acts.map(act => {
-    let p = 0, c = 0;
-    last14.forEach(ds => {
-      const dow = DAYS[new Date(ds).getDay() === 0 ? 6 : new Date(ds).getDay() - 1];
-      if (act.days.includes(dow)) { p++; if (act.completionLog?.[ds]) c++; }
+  const actStats = acts.map((act) => {
+    let p = 0,
+      c = 0;
+    last14.forEach((ds) => {
+      const dow =
+        DAYS[new Date(ds).getDay() === 0 ? 6 : new Date(ds).getDay() - 1];
+      if (act.days.includes(dow)) {
+        p++;
+        if (act.completionLog?.[ds]) c++;
+      }
     });
-    return { ...act, planned: p, completed: c, rate: p > 0 ? Math.round((c / p) * 100) : 0 };
+    return {
+      ...act,
+      planned: p,
+      completed: c,
+      rate: p > 0 ? Math.round((c / p) * 100) : 0,
+    };
   });
   return {
-    consistency: totalPlanned > 0 ? Math.round((totalCompleted / totalPlanned) * 100) : 0,
-    currentStreak, longestStreak, weeklyRates, actStats,
-    score: totalPlanned > 0 ? Math.round((totalCompleted / totalPlanned) * 100) : 0,
+    consistency:
+      totalPlanned > 0 ? Math.round((totalCompleted / totalPlanned) * 100) : 0,
+    currentStreak,
+    longestStreak,
+    weeklyRates,
+    actStats,
+    score:
+      totalPlanned > 0 ? Math.round((totalCompleted / totalPlanned) * 100) : 0,
   };
 };
 
-const Pers = ({ persona, setPersona, activities, setActivities, data }) => {
+const Pers = ({
+  persona,
+  setPersona,
+  activities,
+  addActivityFS,
+  updateActivity,
+  deleteActivity,
+  data,
+}) => {
   const [active, setActive] = useState("Health");
   const [customTag, setCustomTag] = useState("");
   const [showAddActivity, setShowAddActivity] = useState(false);
-  const [newAct, setNewAct] = useState({ name: "", pillar: "Health", days: [], startTime: "07:00", endTime: "08:00" });
+  const [newAct, setNewAct] = useState({
+    name: "",
+    pillar: "Health",
+    days: [],
+    startTime: "07:00",
+    endTime: "08:00",
+  });
   const [persTab, setPersTab] = useState("pillars"); // pillars | routines | analytics
   const tog = (cat, ag) =>
     setPersona((p) => {
@@ -2631,23 +2785,34 @@ const Pers = ({ persona, setPersona, activities, setActivities, data }) => {
       return { ...p, [cat]: upd };
     });
   const total = Object.values(persona).reduce((s, v) => s + v.length, 0);
-  const addActivity = () => {
+  const addActivity = async () => {
     if (!newAct.name.trim() || !newAct.days.length) return;
-    const act = { ...newAct, id: Date.now().toString(), createdAt: todayStr(), completionLog: {} };
-    setActivities(prev => [...prev, act]);
-    setNewAct({ name: "", pillar: active, days: [], startTime: "07:00", endTime: "08:00" });
+    const act = {
+      ...newAct,
+      createdAt: todayStr(),
+      completionLog: {},
+    };
+    await addActivityFS(act).catch(console.error);
+    setNewAct({
+      name: "",
+      pillar: active,
+      days: [],
+      startTime: "07:00",
+      endTime: "08:00",
+    });
     setShowAddActivity(false);
   };
-  const removeActivity = (id) => setActivities(prev => prev.filter(a => a.id !== id));
-  const toggleCompletion = (id, dateStr) => {
-    setActivities(prev => prev.map(a => {
-      if (a.id !== id) return a;
-      const log = { ...(a.completionLog || {}) };
-      log[dateStr] = !log[dateStr];
-      return { ...a, completionLog: log };
-    }));
+  const removeActivity = (id) => deleteActivity(id).catch(console.error);
+  const toggleCompletion = async (id, dateStr) => {
+    const act = activities.find((a) => a.id === id);
+    if (!act) return;
+    const log = { ...(act.completionLog || {}) };
+    log[dateStr] = !log[dateStr];
+    await updateActivity(id, { completionLog: log }).catch(console.error);
   };
-  const todaysActivities = activities.filter(a => a.days.includes(todayName()));
+  const todaysActivities = activities.filter((a) =>
+    a.days.includes(todayName()),
+  );
   const td = todayStr();
 
   return (
@@ -2679,619 +2844,1269 @@ const Pers = ({ persona, setPersona, activities, setActivities, data }) => {
           { id: "pillars", l: "Life Pillars", ico: "dna" },
           { id: "routines", l: "Daily Routines", ico: "clip" },
           { id: "analytics", l: "Consistency", ico: "chart" },
-        ].map(tab => (
+        ].map((tab) => (
           <button
-            key={tab.id} data-h
+            key={tab.id}
+            data-h
             onClick={() => setPersTab(tab.id)}
             style={{
-              padding: "10px 20px", borderRadius: 30, border: "1.5px solid",
-              cursor: "pointer", fontSize: 13, fontFamily: "'Lora',serif",
-              transition: "all .3s", display: "flex", alignItems: "center", gap: 7,
-              background: persTab === tab.id ? "linear-gradient(135deg,rgba(232,200,194,.78),rgba(194,208,220,.58))" : "transparent",
-              borderColor: persTab === tab.id ? "rgba(200,170,150,.38)" : "rgba(200,170,150,.22)",
+              padding: "10px 20px",
+              borderRadius: 30,
+              border: "1.5px solid",
+              cursor: "pointer",
+              fontSize: 13,
+              fontFamily: "'Lora',serif",
+              transition: "all .3s",
+              display: "flex",
+              alignItems: "center",
+              gap: 7,
+              background:
+                persTab === tab.id
+                  ? "linear-gradient(135deg,rgba(232,200,194,.78),rgba(194,208,220,.58))"
+                  : "transparent",
+              borderColor:
+                persTab === tab.id
+                  ? "rgba(200,170,150,.38)"
+                  : "rgba(200,170,150,.22)",
               color: persTab === tab.id ? "var(--brown)" : "var(--soft)",
-              boxShadow: persTab === tab.id ? "0 2px 12px rgba(180,110,100,.11)" : "none",
+              boxShadow:
+                persTab === tab.id
+                  ? "0 2px 12px rgba(180,110,100,.11)"
+                  : "none",
             }}
           >
-            <Ico n={tab.ico} s={14} c={persTab === tab.id ? "var(--rose)" : "var(--mute)"} sw={1.8} />
+            <Ico
+              n={tab.ico}
+              s={14}
+              c={persTab === tab.id ? "var(--rose)" : "var(--mute)"}
+              sw={1.8}
+            />
             {tab.l}
           </button>
         ))}
       </div>
 
       {/* ════ PILLARS TAB ════ */}
-      {persTab === "pillars" && (<>
-      <div
-        className="paper-b fu"
-        style={{
-          padding: "16px 22px",
-          marginBottom: 22,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <div>
+      {persTab === "pillars" && (
+        <>
           <div
+            className="paper-b fu"
             style={{
-              fontFamily: "'Playfair Display',serif",
-              fontSize: 22,
-              color: "var(--brown)",
+              padding: "16px 22px",
+              marginBottom: 22,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
             }}
           >
-            {total} agents configured
-          </div>
-          <p
-            style={{
-              fontSize: 12,
-              color: "var(--soft)",
-              fontStyle: "italic",
-              marginTop: 1,
-            }}
-          >
-            Across {Object.values(persona).filter((v) => v.length > 0).length}{" "}
-            life pillars
-          </p>
-        </div>
-        <div
-          style={{ display: "flex", gap: 7, flexWrap: "wrap", maxWidth: 360 }}
-        >
-          {Object.entries(PIL).map(([k, v]) => {
-            const n = (persona[k] || []).length;
-            return (
-              n > 0 && (
-                <span
-                  key={k}
-                  style={{
-                    fontSize: 12,
-                    padding: "4px 11px",
-                    borderRadius: 20,
-                    background: `${v.c}45`,
-                    color: v.d,
-                    fontFamily: "'Lora',serif",
-                    fontStyle: "italic",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 5,
-                  }}
-                >
-                  <Ico n={v.ico} s={11} c={v.d} sw={2} />
-                  {k} ({n})
-                </span>
-              )
-            );
-          })}
-        </div>
-      </div>
-      <div
-        style={{ display: "flex", gap: 7, marginBottom: 16, flexWrap: "wrap" }}
-      >
-        {Object.entries(PIL).map(([k, v]) => {
-          const n = (persona[k] || []).length;
-          return (
-            <button
-              key={k}
-              data-h
-              onClick={() => { setActive(k); setCustomTag(""); }}
+            <div>
+              <div
+                style={{
+                  fontFamily: "'Playfair Display',serif",
+                  fontSize: 22,
+                  color: "var(--brown)",
+                }}
+              >
+                {total} agents configured
+              </div>
+              <p
+                style={{
+                  fontSize: 12,
+                  color: "var(--soft)",
+                  fontStyle: "italic",
+                  marginTop: 1,
+                }}
+              >
+                Across{" "}
+                {Object.values(persona).filter((v) => v.length > 0).length} life
+                pillars
+              </p>
+            </div>
+            <div
               style={{
-                padding: "8px 16px",
-                borderRadius: 30,
-                border: "1.5px solid",
-                cursor: "pointer",
-                fontSize: 13,
-                fontFamily: "'Lora',serif",
-                transition: "all .3s",
-                background: active === k ? v.d : "transparent",
-                borderColor: active === k ? v.d : "rgba(200,170,150,.28)",
-                color: active === k ? "white" : "var(--soft)",
                 display: "flex",
-                alignItems: "center",
-                gap: 6,
+                gap: 7,
+                flexWrap: "wrap",
+                maxWidth: 360,
               }}
             >
-              <Ico
-                n={v.ico}
-                s={13}
-                c={active === k ? "rgba(255,255,255,.85)" : v.d}
-                sw={1.9}
-              />
-              {k}
-              {n > 0 && (
-                <span
-                  style={{
-                    fontSize: 11,
-                    background:
-                      active === k
-                        ? "rgba(255,255,255,.22)"
-                        : "rgba(200,170,150,.18)",
-                    padding: "1px 7px",
-                    borderRadius: 10,
-                    color: active === k ? "white" : "var(--brown)",
-                  }}
-                >
-                  {n}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
-      <div
-        className="paper fu"
-        style={{ padding: "24px 22px", marginBottom: 18 }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            marginBottom: 4,
-          }}
-        >
+              {Object.entries(PIL).map(([k, v]) => {
+                const n = (persona[k] || []).length;
+                return (
+                  n > 0 && (
+                    <span
+                      key={k}
+                      style={{
+                        fontSize: 12,
+                        padding: "4px 11px",
+                        borderRadius: 20,
+                        background: `${v.c}45`,
+                        color: v.d,
+                        fontFamily: "'Lora',serif",
+                        fontStyle: "italic",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 5,
+                      }}
+                    >
+                      <Ico n={v.ico} s={11} c={v.d} sw={2} />
+                      {k} ({n})
+                    </span>
+                  )
+                );
+              })}
+            </div>
+          </div>
           <div
             style={{
-              width: 34,
-              height: 34,
-              borderRadius: 10,
-              background: `${PIL[active].c}55`,
               display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
+              gap: 7,
+              marginBottom: 16,
+              flexWrap: "wrap",
             }}
           >
-            <Ico n={PIL[active].ico} s={17} c={PIL[active].d} sw={1.8} />
-          </div>
-          <div className="st" style={{ fontSize: 21 }}>
-            {active}
-          </div>
-        </div>
-        <p
-          style={{
-            fontSize: 13,
-            color: "var(--mute)",
-            fontStyle: "italic",
-            marginBottom: 14,
-          }}
-        >
-          Select all that reflect your current life
-        </p>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 9 }}>
-          {PIL[active].a.map((ag) => {
-            const on = (persona[active] || []).includes(ag);
-            return (
-              <div
-                key={ag}
-                className={`pp ${on ? "on" : "off"}`}
-                data-h
-                onClick={() => tog(active, ag)}
-                style={on ? { background: PIL[active].d } : {}}
-              >
-                {on ? "✓" : "+"} {ag}
-              </div>
-            );
-          })}
-          {(persona[active] || []).filter(ag => !PIL[active].a.includes(ag)).map((ag) => (
-            <div
-              key={ag}
-              className="pp on"
-              data-h
-              onClick={() => tog(active, ag)}
-              style={{ background: PIL[active].d }}
-            >
-              ✓ {ag}
-            </div>
-          ))}
-          <form 
-            onSubmit={(e) => { 
-              e.preventDefault(); 
-              if (customTag.trim()) { tog(active, customTag.trim()); setCustomTag(""); } 
-            }}
-            style={{ display: "inline-flex", gap: "6px", alignItems: "center" }}
-          >
-            <input 
-              className="si" 
-              style={{ width: 140, padding: "6px 12px", borderRadius: 30 }} 
-              placeholder="+ Custom..." 
-              value={customTag} 
-              onChange={e => setCustomTag(e.target.value)} 
-            />
-          </form>
-        </div>
-      </div>
-      {Object.values(persona).some((v) => v.length > 0) && (
-        <div className="paper fu" style={{ padding: "22px" }}>
-          <div className="st" style={{ fontSize: 19, marginBottom: 14 }}>
-            Your Configuration
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
-            {Object.entries(persona)
-              .filter(([, v]) => v.length > 0)
-              .map(([cat, ags]) => (
-                <div
-                  key={cat}
-                  style={{ display: "flex", gap: 11, alignItems: "flex-start" }}
+            {Object.entries(PIL).map(([k, v]) => {
+              const n = (persona[k] || []).length;
+              return (
+                <button
+                  key={k}
+                  data-h
+                  onClick={() => {
+                    setActive(k);
+                    setCustomTag("");
+                  }}
+                  style={{
+                    padding: "8px 16px",
+                    borderRadius: 30,
+                    border: "1.5px solid",
+                    cursor: "pointer",
+                    fontSize: 13,
+                    fontFamily: "'Lora',serif",
+                    transition: "all .3s",
+                    background: active === k ? v.d : "transparent",
+                    borderColor: active === k ? v.d : "rgba(200,170,150,.28)",
+                    color: active === k ? "white" : "var(--soft)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
                 >
+                  <Ico
+                    n={v.ico}
+                    s={13}
+                    c={active === k ? "rgba(255,255,255,.85)" : v.d}
+                    sw={1.9}
+                  />
+                  {k}
+                  {n > 0 && (
+                    <span
+                      style={{
+                        fontSize: 11,
+                        background:
+                          active === k
+                            ? "rgba(255,255,255,.22)"
+                            : "rgba(200,170,150,.18)",
+                        padding: "1px 7px",
+                        borderRadius: 10,
+                        color: active === k ? "white" : "var(--brown)",
+                      }}
+                    >
+                      {n}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          <div
+            className="paper fu"
+            style={{ padding: "24px 22px", marginBottom: 18 }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                marginBottom: 4,
+              }}
+            >
+              <div
+                style={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: 10,
+                  background: `${PIL[active].c}55`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Ico n={PIL[active].ico} s={17} c={PIL[active].d} sw={1.8} />
+              </div>
+              <div className="st" style={{ fontSize: 21 }}>
+                {active}
+              </div>
+            </div>
+            <p
+              style={{
+                fontSize: 13,
+                color: "var(--mute)",
+                fontStyle: "italic",
+                marginBottom: 14,
+              }}
+            >
+              Select all that reflect your current life
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 9 }}>
+              {PIL[active].a.map((ag) => {
+                const on = (persona[active] || []).includes(ag);
+                return (
+                  <div
+                    key={ag}
+                    className={`pp ${on ? "on" : "off"}`}
+                    data-h
+                    onClick={() => tog(active, ag)}
+                    style={on ? { background: PIL[active].d } : {}}
+                  >
+                    {on ? "✓" : "+"} {ag}
+                  </div>
+                );
+              })}
+              {(persona[active] || [])
+                .filter((ag) => !PIL[active].a.includes(ag))
+                .map((ag) => (
+                  <div
+                    key={ag}
+                    className="pp on"
+                    data-h
+                    onClick={() => tog(active, ag)}
+                    style={{ background: PIL[active].d }}
+                  >
+                    ✓ {ag}
+                  </div>
+                ))}
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (customTag.trim()) {
+                    tog(active, customTag.trim());
+                    setCustomTag("");
+                  }
+                }}
+                style={{
+                  display: "inline-flex",
+                  gap: "6px",
+                  alignItems: "center",
+                }}
+              >
+                <input
+                  className="si"
+                  style={{ width: 140, padding: "6px 12px", borderRadius: 30 }}
+                  placeholder="+ Custom..."
+                  value={customTag}
+                  onChange={(e) => setCustomTag(e.target.value)}
+                />
+              </form>
+            </div>
+          </div>
+          {Object.values(persona).some((v) => v.length > 0) && (
+            <div className="paper fu" style={{ padding: "22px" }}>
+              <div className="st" style={{ fontSize: 19, marginBottom: 14 }}>
+                Your Configuration
+              </div>
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: 11 }}
+              >
+                {Object.entries(persona)
+                  .filter(([, v]) => v.length > 0)
+                  .map(([cat, ags]) => (
+                    <div
+                      key={cat}
+                      style={{
+                        display: "flex",
+                        gap: 11,
+                        alignItems: "flex-start",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 28,
+                          height: 28,
+                          borderRadius: 8,
+                          background: `${PIL[cat].c}45`,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                          marginTop: 2,
+                        }}
+                      >
+                        <Ico n={PIL[cat].ico} s={14} c={PIL[cat].d} sw={1.9} />
+                      </div>
+                      <div>
+                        <div
+                          style={{
+                            fontSize: 13,
+                            fontFamily: "'Lora',serif",
+                            fontWeight: 500,
+                            color: "var(--brown)",
+                            marginBottom: 4,
+                          }}
+                        >
+                          {cat}
+                        </div>
+                        <div
+                          style={{ display: "flex", gap: 6, flexWrap: "wrap" }}
+                        >
+                          {ags.map((a) => (
+                            <span
+                              key={a}
+                              style={{
+                                fontSize: 12,
+                                padding: "2px 10px",
+                                borderRadius: 20,
+                                background: `${PIL[cat].c}38`,
+                                color: PIL[cat].d,
+                                fontStyle: "italic",
+                              }}
+                            >
+                              {a}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ════ ROUTINES TAB ════ */}
+      {persTab === "routines" && (
+        <>
+          {/* Today's check-in */}
+          {todaysActivities.length > 0 && (
+            <div
+              className="paper-b fu"
+              style={{ padding: "20px 22px", marginBottom: 22 }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 9,
+                  marginBottom: 14,
+                }}
+              >
+                <div
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 9,
+                    background: "rgba(122,154,120,.15)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Ico n="check" s={16} c="#7A9A78" sw={2} />
+                </div>
+                <div>
+                  <div className="st" style={{ fontSize: 18 }}>
+                    Today's Check-in
+                  </div>
                   <div
                     style={{
-                      width: 28,
-                      height: 28,
-                      borderRadius: 8,
-                      background: `${PIL[cat].c}45`,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
-                      marginTop: 2,
+                      fontSize: 12,
+                      color: "var(--mute)",
+                      fontStyle: "italic",
                     }}
                   >
-                    <Ico n={PIL[cat].ico} s={14} c={PIL[cat].d} sw={1.9} />
+                    {todayName()},{" "}
+                    {new Date().toLocaleDateString("en-IN", {
+                      month: "long",
+                      day: "numeric",
+                    })}
                   </div>
+                </div>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {todaysActivities.map((act) => {
+                  const done = act.completionLog?.[td];
+                  const pilObj = PIL[act.pillar] || PIL.Health;
+                  return (
+                    <div
+                      key={act.id}
+                      data-h
+                      onClick={() => toggleCompletion(act.id, td)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 12,
+                        padding: "12px 16px",
+                        borderRadius: 14,
+                        cursor: "pointer",
+                        transition: "all .3s",
+                        background: done
+                          ? "rgba(122,154,120,.12)"
+                          : "rgba(200,170,150,.08)",
+                        border: `1.5px solid ${done ? "rgba(122,154,120,.3)" : "rgba(200,170,150,.18)"}`,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 26,
+                          height: 26,
+                          borderRadius: 8,
+                          background: done ? "#7A9A78" : "transparent",
+                          border: done
+                            ? "none"
+                            : "2px solid rgba(200,170,150,.35)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          transition: "all .3s",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {done && <Ico n="check" s={14} c="white" sw={2.5} />}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div
+                          style={{
+                            fontSize: 14,
+                            fontFamily: "'Lora',serif",
+                            fontWeight: 500,
+                            color: done ? "#7A9A78" : "var(--text)",
+                            textDecoration: done ? "line-through" : "none",
+                          }}
+                        >
+                          {act.name}
+                        </div>
+                        <div style={{ fontSize: 11, color: "var(--mute)" }}>
+                          {act.startTime} – {act.endTime}
+                        </div>
+                      </div>
+                      <span
+                        style={{
+                          fontSize: 11,
+                          padding: "3px 10px",
+                          borderRadius: 20,
+                          background: `${pilObj.c}38`,
+                          color: pilObj.d,
+                          fontStyle: "italic",
+                        }}
+                      >
+                        {act.pillar}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Add Activity Form */}
+          <div
+            className="paper fu"
+            style={{ padding: "22px", marginBottom: 18 }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 16,
+              }}
+            >
+              <div className="st" style={{ fontSize: 19 }}>
+                Daily Routines
+              </div>
+              <button
+                data-h
+                onClick={() => setShowAddActivity(!showAddActivity)}
+                className="btn-s"
+                style={{ padding: "8px 20px", fontSize: 12 }}
+              >
+                {showAddActivity ? "Cancel" : "+ Add Routine"}
+              </button>
+            </div>
+
+            {showAddActivity && (
+              <div
+                className="fu"
+                style={{
+                  padding: 18,
+                  borderRadius: 16,
+                  marginBottom: 16,
+                  background: "rgba(232,200,194,.12)",
+                  border: "1px solid rgba(200,170,150,.18)",
+                }}
+              >
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: 12,
+                    marginBottom: 14,
+                  }}
+                >
                   <div>
                     <div
+                      className="cv"
                       style={{
-                        fontSize: 13,
-                        fontFamily: "'Lora',serif",
-                        fontWeight: 500,
-                        color: "var(--brown)",
+                        fontSize: 12,
+                        color: "var(--mute)",
                         marginBottom: 4,
                       }}
                     >
-                      {cat}
+                      activity name
                     </div>
-                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                      {ags.map((a) => (
-                        <span
-                          key={a}
+                    <input
+                      className="si"
+                      placeholder="e.g. Gym, Reading, Meditation..."
+                      value={newAct.name}
+                      onChange={(e) =>
+                        setNewAct((p) => ({ ...p, name: e.target.value }))
+                      }
+                    />
+                  </div>
+                  <div>
+                    <div
+                      className="cv"
+                      style={{
+                        fontSize: 12,
+                        color: "var(--mute)",
+                        marginBottom: 4,
+                      }}
+                    >
+                      life pillar
+                    </div>
+                    <select
+                      className="si"
+                      value={newAct.pillar}
+                      onChange={(e) =>
+                        setNewAct((p) => ({ ...p, pillar: e.target.value }))
+                      }
+                      style={{ cursor: "pointer" }}
+                    >
+                      {Object.keys(PIL).map((k) => (
+                        <option key={k} value={k}>
+                          {k}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: 12,
+                    marginBottom: 14,
+                  }}
+                >
+                  <div>
+                    <div
+                      className="cv"
+                      style={{
+                        fontSize: 12,
+                        color: "var(--mute)",
+                        marginBottom: 4,
+                      }}
+                    >
+                      start time
+                    </div>
+                    <input
+                      className="si"
+                      type="time"
+                      value={newAct.startTime}
+                      onChange={(e) =>
+                        setNewAct((p) => ({ ...p, startTime: e.target.value }))
+                      }
+                    />
+                  </div>
+                  <div>
+                    <div
+                      className="cv"
+                      style={{
+                        fontSize: 12,
+                        color: "var(--mute)",
+                        marginBottom: 4,
+                      }}
+                    >
+                      end time
+                    </div>
+                    <input
+                      className="si"
+                      type="time"
+                      value={newAct.endTime}
+                      onChange={(e) =>
+                        setNewAct((p) => ({ ...p, endTime: e.target.value }))
+                      }
+                    />
+                  </div>
+                </div>
+                <div>
+                  <div
+                    className="cv"
+                    style={{
+                      fontSize: 12,
+                      color: "var(--mute)",
+                      marginBottom: 6,
+                    }}
+                  >
+                    days of the week
+                  </div>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    {DAYS.map((d, i) => {
+                      const sel = newAct.days.includes(d);
+                      return (
+                        <button
+                          key={d}
+                          data-h
+                          onClick={() =>
+                            setNewAct((p) => ({
+                              ...p,
+                              days: sel
+                                ? p.days.filter((x) => x !== d)
+                                : [...p.days, d],
+                            }))
+                          }
                           style={{
-                            fontSize: 12,
-                            padding: "2px 10px",
+                            padding: "6px 14px",
                             borderRadius: 20,
-                            background: `${PIL[cat].c}38`,
-                            color: PIL[cat].d,
+                            fontSize: 12,
+                            fontFamily: "'Lora',serif",
+                            border: "1.5px solid",
+                            cursor: "pointer",
+                            transition: "all .25s",
+                            background: sel ? "var(--rose)" : "transparent",
+                            borderColor: sel
+                              ? "var(--rose)"
+                              : "rgba(200,170,150,.28)",
+                            color: sel ? "white" : "var(--soft)",
+                          }}
+                        >
+                          {DAY_SHORT[i]}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <button
+                  data-h
+                  onClick={addActivity}
+                  className="btn-s"
+                  style={{
+                    width: "100%",
+                    marginTop: 16,
+                    padding: "10px",
+                    fontSize: 13,
+                  }}
+                >
+                  Save Routine
+                </button>
+              </div>
+            )}
+
+            {/* Activity list */}
+            {activities.length === 0 ? (
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: "30px 0",
+                  color: "var(--mute)",
+                  fontStyle: "italic",
+                  fontSize: 13,
+                }}
+              >
+                No routines logged yet. Add your first daily routine to start
+                tracking consistency ✦
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {activities.map((act) => {
+                  const pilObj = PIL[act.pillar] || PIL.Health;
+                  const logCount = Object.values(
+                    act.completionLog || {},
+                  ).filter(Boolean).length;
+                  return (
+                    <div
+                      key={act.id}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 12,
+                        padding: "12px 16px",
+                        borderRadius: 14,
+                        background: "rgba(255,250,244,.6)",
+                        border: "1px solid rgba(200,170,150,.15)",
+                        transition: "all .3s",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 30,
+                          height: 30,
+                          borderRadius: 9,
+                          background: `${pilObj.c}45`,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                        }}
+                      >
+                        <Ico n={pilObj.ico} s={15} c={pilObj.d} sw={1.8} />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div
+                          style={{
+                            fontSize: 14,
+                            fontFamily: "'Lora',serif",
+                            fontWeight: 500,
+                            color: "var(--text)",
+                          }}
+                        >
+                          {act.name}
+                        </div>
+                        <div style={{ fontSize: 11, color: "var(--mute)" }}>
+                          {act.startTime} – {act.endTime} ·{" "}
+                          {act.days.map((d) => d.slice(0, 3)).join(", ")}
+                        </div>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <span
+                          style={{
+                            fontSize: 11,
+                            padding: "3px 10px",
+                            borderRadius: 20,
+                            background: `${pilObj.c}38`,
+                            color: pilObj.d,
                             fontStyle: "italic",
                           }}
                         >
-                          {a}
+                          {act.pillar}
                         </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ))}
-          </div>
-        </div>
-      )}
-      </>)}
-
-      {/* ════ ROUTINES TAB ════ */}
-      {persTab === "routines" && (<>
-        {/* Today's check-in */}
-        {todaysActivities.length > 0 && (
-          <div className="paper-b fu" style={{ padding: "20px 22px", marginBottom: 22 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 14 }}>
-              <div style={{ width: 32, height: 32, borderRadius: 9, background: "rgba(122,154,120,.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Ico n="check" s={16} c="#7A9A78" sw={2} />
-              </div>
-              <div>
-                <div className="st" style={{ fontSize: 18 }}>Today's Check-in</div>
-                <div style={{ fontSize: 12, color: "var(--mute)", fontStyle: "italic" }}>{todayName()}, {new Date().toLocaleDateString("en-IN", { month: "long", day: "numeric" })}</div>
-              </div>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {todaysActivities.map(act => {
-                const done = act.completionLog?.[td];
-                const pilObj = PIL[act.pillar] || PIL.Health;
-                return (
-                  <div key={act.id} data-h onClick={() => toggleCompletion(act.id, td)}
-                    style={{
-                      display: "flex", alignItems: "center", gap: 12, padding: "12px 16px",
-                      borderRadius: 14, cursor: "pointer", transition: "all .3s",
-                      background: done ? "rgba(122,154,120,.12)" : "rgba(200,170,150,.08)",
-                      border: `1.5px solid ${done ? "rgba(122,154,120,.3)" : "rgba(200,170,150,.18)"}`,
-                    }}
-                  >
-                    <div style={{
-                      width: 26, height: 26, borderRadius: 8,
-                      background: done ? "#7A9A78" : "transparent",
-                      border: done ? "none" : "2px solid rgba(200,170,150,.35)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      transition: "all .3s", flexShrink: 0,
-                    }}>
-                      {done && <Ico n="check" s={14} c="white" sw={2.5} />}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 14, fontFamily: "'Lora',serif", fontWeight: 500, color: done ? "#7A9A78" : "var(--text)", textDecoration: done ? "line-through" : "none" }}>{act.name}</div>
-                      <div style={{ fontSize: 11, color: "var(--mute)" }}>{act.startTime} – {act.endTime}</div>
-                    </div>
-                    <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, background: `${pilObj.c}38`, color: pilObj.d, fontStyle: "italic" }}>{act.pillar}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Add Activity Form */}
-        <div className="paper fu" style={{ padding: "22px", marginBottom: 18 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-            <div className="st" style={{ fontSize: 19 }}>Daily Routines</div>
-            <button data-h onClick={() => setShowAddActivity(!showAddActivity)}
-              className="btn-s" style={{ padding: "8px 20px", fontSize: 12 }}>
-              {showAddActivity ? "Cancel" : "+ Add Routine"}
-            </button>
-          </div>
-
-          {showAddActivity && (
-            <div className="fu" style={{
-              padding: 18, borderRadius: 16, marginBottom: 16,
-              background: "rgba(232,200,194,.12)", border: "1px solid rgba(200,170,150,.18)",
-            }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 14 }}>
-                <div>
-                  <div className="cv" style={{ fontSize: 12, color: "var(--mute)", marginBottom: 4 }}>activity name</div>
-                  <input className="si" placeholder="e.g. Gym, Reading, Meditation..." value={newAct.name} onChange={e => setNewAct(p => ({ ...p, name: e.target.value }))} />
-                </div>
-                <div>
-                  <div className="cv" style={{ fontSize: 12, color: "var(--mute)", marginBottom: 4 }}>life pillar</div>
-                  <select className="si" value={newAct.pillar} onChange={e => setNewAct(p => ({ ...p, pillar: e.target.value }))}
-                    style={{ cursor: "pointer" }}>
-                    {Object.keys(PIL).map(k => <option key={k} value={k}>{k}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 14 }}>
-                <div>
-                  <div className="cv" style={{ fontSize: 12, color: "var(--mute)", marginBottom: 4 }}>start time</div>
-                  <input className="si" type="time" value={newAct.startTime} onChange={e => setNewAct(p => ({ ...p, startTime: e.target.value }))} />
-                </div>
-                <div>
-                  <div className="cv" style={{ fontSize: 12, color: "var(--mute)", marginBottom: 4 }}>end time</div>
-                  <input className="si" type="time" value={newAct.endTime} onChange={e => setNewAct(p => ({ ...p, endTime: e.target.value }))} />
-                </div>
-              </div>
-              <div>
-                <div className="cv" style={{ fontSize: 12, color: "var(--mute)", marginBottom: 6 }}>days of the week</div>
-                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                  {DAYS.map((d, i) => {
-                    const sel = newAct.days.includes(d);
-                    return (
-                      <button key={d} data-h
-                        onClick={() => setNewAct(p => ({ ...p, days: sel ? p.days.filter(x => x !== d) : [...p.days, d] }))}
-                        style={{
-                          padding: "6px 14px", borderRadius: 20, fontSize: 12, fontFamily: "'Lora',serif",
-                          border: "1.5px solid", cursor: "pointer", transition: "all .25s",
-                          background: sel ? "var(--rose)" : "transparent",
-                          borderColor: sel ? "var(--rose)" : "rgba(200,170,150,.28)",
-                          color: sel ? "white" : "var(--soft)",
-                        }}
-                      >{DAY_SHORT[i]}</button>
-                    );
-                  })}
-                </div>
-              </div>
-              <button data-h onClick={addActivity} className="btn-s" style={{ width: "100%", marginTop: 16, padding: "10px", fontSize: 13 }}>
-                Save Routine
-              </button>
-            </div>
-          )}
-
-          {/* Activity list */}
-          {activities.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "30px 0", color: "var(--mute)", fontStyle: "italic", fontSize: 13 }}>
-              No routines logged yet. Add your first daily routine to start tracking consistency ✦
-            </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {activities.map(act => {
-                const pilObj = PIL[act.pillar] || PIL.Health;
-                const logCount = Object.values(act.completionLog || {}).filter(Boolean).length;
-                return (
-                  <div key={act.id} style={{
-                    display: "flex", alignItems: "center", gap: 12, padding: "12px 16px",
-                    borderRadius: 14, background: "rgba(255,250,244,.6)",
-                    border: "1px solid rgba(200,170,150,.15)", transition: "all .3s",
-                  }}>
-                    <div style={{ width: 30, height: 30, borderRadius: 9, background: `${pilObj.c}45`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <Ico n={pilObj.ico} s={15} c={pilObj.d} sw={1.8} />
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 14, fontFamily: "'Lora',serif", fontWeight: 500, color: "var(--text)" }}>{act.name}</div>
-                      <div style={{ fontSize: 11, color: "var(--mute)" }}>
-                        {act.startTime} – {act.endTime} · {act.days.map(d => d.slice(0, 3)).join(", ")}
+                        <div
+                          style={{
+                            fontSize: 10,
+                            color: "var(--mute)",
+                            marginTop: 3,
+                          }}
+                        >
+                          {logCount} completions
+                        </div>
                       </div>
+                      <button
+                        data-h
+                        onClick={() => removeActivity(act.id)}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          padding: 4,
+                          opacity: 0.5,
+                          transition: "opacity .2s",
+                        }}
+                        onMouseEnter={(e) => (e.target.style.opacity = 1)}
+                        onMouseLeave={(e) => (e.target.style.opacity = 0.5)}
+                      >
+                        <Ico n="exit" s={14} c="var(--rose)" sw={1.8} />
+                      </button>
                     </div>
-                    <div style={{ textAlign: "right" }}>
-                      <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 20, background: `${pilObj.c}38`, color: pilObj.d, fontStyle: "italic" }}>{act.pillar}</span>
-                      <div style={{ fontSize: 10, color: "var(--mute)", marginTop: 3 }}>{logCount} completions</div>
-                    </div>
-                    <button data-h onClick={() => removeActivity(act.id)}
-                      style={{ background: "none", border: "none", cursor: "pointer", padding: 4, opacity: 0.5, transition: "opacity .2s" }}
-                      onMouseEnter={e => e.target.style.opacity = 1} onMouseLeave={e => e.target.style.opacity = 0.5}>
-                      <Ico n="exit" s={14} c="var(--rose)" sw={1.8} />
-                    </button>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Weekly Schedule Grid */}
+          {activities.length > 0 && (
+            <div className="paper fu" style={{ padding: "22px" }}>
+              <div className="st" style={{ fontSize: 19, marginBottom: 14 }}>
+                Weekly Schedule
+              </div>
+              <div style={{ overflowX: "auto" }}>
+                <table
+                  style={{
+                    width: "100%",
+                    borderCollapse: "collapse",
+                    fontSize: 12,
+                    fontFamily: "'Lora',serif",
+                  }}
+                >
+                  <thead>
+                    <tr>
+                      <th
+                        style={{
+                          padding: "8px 10px",
+                          textAlign: "left",
+                          color: "var(--mute)",
+                          fontWeight: 400,
+                          fontStyle: "italic",
+                          borderBottom: "1px solid rgba(200,170,150,.15)",
+                        }}
+                      >
+                        Routine
+                      </th>
+                      {DAY_SHORT.map((d) => (
+                        <th
+                          key={d}
+                          style={{
+                            padding: "8px 6px",
+                            textAlign: "center",
+                            color:
+                              d === todayName().slice(0, 3)
+                                ? "var(--rose)"
+                                : "var(--mute)",
+                            fontWeight:
+                              d === todayName().slice(0, 3) ? 600 : 400,
+                            fontStyle: "italic",
+                            borderBottom: "1px solid rgba(200,170,150,.15)",
+                          }}
+                        >
+                          {d}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {activities.map((act) => {
+                      const pilObj = PIL[act.pillar] || PIL.Health;
+                      return (
+                        <tr key={act.id}>
+                          <td
+                            style={{
+                              padding: "10px 10px",
+                              color: "var(--text)",
+                              borderBottom: "1px solid rgba(200,170,150,.08)",
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 6,
+                              }}
+                            >
+                              <div
+                                style={{
+                                  width: 6,
+                                  height: 6,
+                                  borderRadius: "50%",
+                                  background: pilObj.d,
+                                  flexShrink: 0,
+                                }}
+                              />
+                              {act.name}
+                              <span
+                                style={{ fontSize: 10, color: "var(--mute)" }}
+                              >
+                                {act.startTime}
+                              </span>
+                            </div>
+                          </td>
+                          {DAYS.map((day) => {
+                            const isScheduled = act.days.includes(day);
+                            return (
+                              <td
+                                key={day}
+                                style={{
+                                  padding: "10px 6px",
+                                  textAlign: "center",
+                                  borderBottom:
+                                    "1px solid rgba(200,170,150,.08)",
+                                }}
+                              >
+                                {isScheduled ? (
+                                  <div
+                                    style={{
+                                      width: 20,
+                                      height: 20,
+                                      borderRadius: 6,
+                                      margin: "0 auto",
+                                      background: `linear-gradient(135deg,${pilObj.c},${pilObj.d})`,
+                                      opacity: 0.7,
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                    }}
+                                  >
+                                    <Ico n="check" s={10} c="white" sw={2.5} />
+                                  </div>
+                                ) : (
+                                  <div
+                                    style={{
+                                      width: 20,
+                                      height: 20,
+                                      borderRadius: 6,
+                                      margin: "0 auto",
+                                      background: "rgba(200,170,150,.08)",
+                                    }}
+                                  />
+                                )}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
-        </div>
-
-        {/* Weekly Schedule Grid */}
-        {activities.length > 0 && (
-          <div className="paper fu" style={{ padding: "22px" }}>
-            <div className="st" style={{ fontSize: 19, marginBottom: 14 }}>Weekly Schedule</div>
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, fontFamily: "'Lora',serif" }}>
-                <thead>
-                  <tr>
-                    <th style={{ padding: "8px 10px", textAlign: "left", color: "var(--mute)", fontWeight: 400, fontStyle: "italic", borderBottom: "1px solid rgba(200,170,150,.15)" }}>Routine</th>
-                    {DAY_SHORT.map(d => (
-                      <th key={d} style={{
-                        padding: "8px 6px", textAlign: "center", color: d === todayName().slice(0, 3) ? "var(--rose)" : "var(--mute)",
-                        fontWeight: d === todayName().slice(0, 3) ? 600 : 400, fontStyle: "italic",
-                        borderBottom: "1px solid rgba(200,170,150,.15)",
-                      }}>{d}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {activities.map(act => {
-                    const pilObj = PIL[act.pillar] || PIL.Health;
-                    return (
-                      <tr key={act.id}>
-                        <td style={{ padding: "10px 10px", color: "var(--text)", borderBottom: "1px solid rgba(200,170,150,.08)" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                            <div style={{ width: 6, height: 6, borderRadius: "50%", background: pilObj.d, flexShrink: 0 }} />
-                            {act.name}
-                            <span style={{ fontSize: 10, color: "var(--mute)" }}>{act.startTime}</span>
-                          </div>
-                        </td>
-                        {DAYS.map(day => {
-                          const isScheduled = act.days.includes(day);
-                          return (
-                            <td key={day} style={{ padding: "10px 6px", textAlign: "center", borderBottom: "1px solid rgba(200,170,150,.08)" }}>
-                              {isScheduled ? (
-                                <div style={{
-                                  width: 20, height: 20, borderRadius: 6, margin: "0 auto",
-                                  background: `linear-gradient(135deg,${pilObj.c},${pilObj.d})`,
-                                  opacity: 0.7, display: "flex", alignItems: "center", justifyContent: "center",
-                                }}>
-                                  <Ico n="check" s={10} c="white" sw={2.5} />
-                                </div>
-                              ) : (
-                                <div style={{ width: 20, height: 20, borderRadius: 6, margin: "0 auto", background: "rgba(200,170,150,.08)" }} />
-                              )}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-      </>)}
+        </>
+      )}
 
       {/* ════ ANALYTICS TAB ════ */}
-      {persTab === "analytics" && (<>
-        <div className="paper fu" style={{ padding: "22px", marginBottom: 18 }}>
-          <div className="st" style={{ fontSize: 19, marginBottom: 6 }}>Pillar Consistency Analysis</div>
-          <p style={{ fontSize: 12, color: "var(--mute)", fontStyle: "italic", marginBottom: 18 }}>
-            Based on your last 14 days of activity completions
-          </p>
-
-          {activities.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "30px 0", color: "var(--mute)", fontStyle: "italic", fontSize: 13 }}>
-              Add daily routines to see your consistency analytics ✦
+      {persTab === "analytics" && (
+        <>
+          <div
+            className="paper fu"
+            style={{ padding: "22px", marginBottom: 18 }}
+          >
+            <div className="st" style={{ fontSize: 19, marginBottom: 6 }}>
+              Pillar Consistency Analysis
             </div>
-          ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-              {Object.entries(PIL).map(([pillar, pilObj]) => {
-                const stats = calcPillarStats(activities, pillar);
-                if (!stats) return null;
-                const cColor = stats.consistency >= 80 ? "#7A9A78" : stats.consistency >= 50 ? "#A88040" : "#A8504A";
-                return (
-                  <div key={pillar} style={{
-                    padding: 18, borderRadius: 16,
-                    background: `${pilObj.c}12`, border: `1px solid ${pilObj.c}30`,
-                  }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                      <div style={{ width: 28, height: 28, borderRadius: 8, background: `${pilObj.c}55`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <Ico n={pilObj.ico} s={14} c={pilObj.d} sw={1.9} />
-                      </div>
-                      <div className="st" style={{ fontSize: 16 }}>{pillar}</div>
-                    </div>
+            <p
+              style={{
+                fontSize: 12,
+                color: "var(--mute)",
+                fontStyle: "italic",
+                marginBottom: 18,
+              }}
+            >
+              Based on your last 14 days of activity completions
+            </p>
 
-                    {/* Consistency ring */}
-                    <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 12 }}>
-                      <div style={{ position: "relative", width: 56, height: 56 }}>
-                        <svg width={56} height={56} viewBox="0 0 56 56">
-                          <circle cx={28} cy={28} r={23} fill="none" stroke="rgba(200,170,150,.15)" strokeWidth={4} />
-                          <circle cx={28} cy={28} r={23} fill="none" stroke={cColor} strokeWidth={4}
-                            strokeDasharray={`${(stats.consistency / 100) * 144.5} 144.5`}
-                            strokeLinecap="round" transform="rotate(-90 28 28)" style={{ transition: "stroke-dasharray 1s" }} />
-                        </svg>
-                        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Playfair Display',serif", fontSize: 15, fontWeight: 600, color: cColor }}>
-                          {stats.consistency}%
+            {activities.length === 0 ? (
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: "30px 0",
+                  color: "var(--mute)",
+                  fontStyle: "italic",
+                  fontSize: 13,
+                }}
+              >
+                Add daily routines to see your consistency analytics ✦
+              </div>
+            ) : (
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: 14,
+                }}
+              >
+                {Object.entries(PIL).map(([pillar, pilObj]) => {
+                  const stats = calcPillarStats(activities, pillar);
+                  if (!stats) return null;
+                  const cColor =
+                    stats.consistency >= 80
+                      ? "#7A9A78"
+                      : stats.consistency >= 50
+                        ? "#A88040"
+                        : "#A8504A";
+                  return (
+                    <div
+                      key={pillar}
+                      style={{
+                        padding: 18,
+                        borderRadius: 16,
+                        background: `${pilObj.c}12`,
+                        border: `1px solid ${pilObj.c}30`,
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          marginBottom: 12,
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 28,
+                            height: 28,
+                            borderRadius: 8,
+                            background: `${pilObj.c}55`,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <Ico n={pilObj.ico} s={14} c={pilObj.d} sw={1.9} />
+                        </div>
+                        <div className="st" style={{ fontSize: 16 }}>
+                          {pillar}
                         </div>
                       </div>
-                      <div>
-                        <div style={{ fontSize: 12, color: "var(--soft)", marginBottom: 4 }}>
-                          <span style={{ fontWeight: 600, color: "var(--brown)" }}>🔥 {stats.currentStreak}</span> day streak
-                        </div>
-                        <div style={{ fontSize: 11, color: "var(--mute)", fontStyle: "italic" }}>
-                          Best: {stats.longestStreak} days
-                        </div>
-                      </div>
-                    </div>
 
-                    {/* Weekly trend mini bars */}
-                    <div style={{ display: "flex", gap: 6, alignItems: "flex-end", height: 30, marginBottom: 10 }}>
-                      {stats.weeklyRates.map((rate, i) => (
-                        <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-                          <div style={{
-                            width: "100%", height: `${Math.max(4, rate * 0.28)}px`, borderRadius: 3,
-                            background: `linear-gradient(180deg,${pilObj.d},${pilObj.c})`,
-                            transition: "height 1s",
-                          }} />
-                          <span style={{ fontSize: 9, color: "var(--mute)" }}>W{i + 1}</span>
+                      {/* Consistency ring */}
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 16,
+                          marginBottom: 12,
+                        }}
+                      >
+                        <div
+                          style={{
+                            position: "relative",
+                            width: 56,
+                            height: 56,
+                          }}
+                        >
+                          <svg width={56} height={56} viewBox="0 0 56 56">
+                            <circle
+                              cx={28}
+                              cy={28}
+                              r={23}
+                              fill="none"
+                              stroke="rgba(200,170,150,.15)"
+                              strokeWidth={4}
+                            />
+                            <circle
+                              cx={28}
+                              cy={28}
+                              r={23}
+                              fill="none"
+                              stroke={cColor}
+                              strokeWidth={4}
+                              strokeDasharray={`${(stats.consistency / 100) * 144.5} 144.5`}
+                              strokeLinecap="round"
+                              transform="rotate(-90 28 28)"
+                              style={{ transition: "stroke-dasharray 1s" }}
+                            />
+                          </svg>
+                          <div
+                            style={{
+                              position: "absolute",
+                              inset: 0,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontFamily: "'Playfair Display',serif",
+                              fontSize: 15,
+                              fontWeight: 600,
+                              color: cColor,
+                            }}
+                          >
+                            {stats.consistency}%
+                          </div>
+                        </div>
+                        <div>
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: "var(--soft)",
+                              marginBottom: 4,
+                            }}
+                          >
+                            <span
+                              style={{ fontWeight: 600, color: "var(--brown)" }}
+                            >
+                              🔥 {stats.currentStreak}
+                            </span>{" "}
+                            day streak
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 11,
+                              color: "var(--mute)",
+                              fontStyle: "italic",
+                            }}
+                          >
+                            Best: {stats.longestStreak} days
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Weekly trend mini bars */}
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: 6,
+                          alignItems: "flex-end",
+                          height: 30,
+                          marginBottom: 10,
+                        }}
+                      >
+                        {stats.weeklyRates.map((rate, i) => (
+                          <div
+                            key={i}
+                            style={{
+                              flex: 1,
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "center",
+                              gap: 2,
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: "100%",
+                                height: `${Math.max(4, rate * 0.28)}px`,
+                                borderRadius: 3,
+                                background: `linear-gradient(180deg,${pilObj.d},${pilObj.c})`,
+                                transition: "height 1s",
+                              }}
+                            />
+                            <span style={{ fontSize: 9, color: "var(--mute)" }}>
+                              W{i + 1}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Per-activity breakdown */}
+                      {stats.actStats.map((as) => (
+                        <div
+                          key={as.id}
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            padding: "5px 0",
+                            borderTop: "1px solid rgba(200,170,150,.1)",
+                          }}
+                        >
+                          <div style={{ fontSize: 12, color: "var(--soft)" }}>
+                            {as.name}
+                          </div>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 6,
+                            }}
+                          >
+                            <div className="pt" style={{ width: 50 }}>
+                              <div
+                                className="pf"
+                                style={{
+                                  width: `${as.rate}%`,
+                                  background:
+                                    as.rate >= 80
+                                      ? "#7A9A78"
+                                      : as.rate >= 50
+                                        ? "#A88040"
+                                        : "#A8504A",
+                                }}
+                              />
+                            </div>
+                            <span
+                              style={{
+                                fontSize: 11,
+                                color: as.rate < 60 ? "#A8504A" : "var(--mute)",
+                                fontWeight: as.rate < 60 ? 600 : 400,
+                              }}
+                            >
+                              {as.rate}%{as.rate < 60 ? " ⚠" : ""}
+                            </span>
+                          </div>
                         </div>
                       ))}
                     </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
-                    {/* Per-activity breakdown */}
-                    {stats.actStats.map(as => (
-                      <div key={as.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "5px 0", borderTop: "1px solid rgba(200,170,150,.1)" }}>
-                        <div style={{ fontSize: 12, color: "var(--soft)" }}>{as.name}</div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                          <div className="pt" style={{ width: 50 }}>
-                            <div className="pf" style={{ width: `${as.rate}%`, background: as.rate >= 80 ? "#7A9A78" : as.rate >= 50 ? "#A88040" : "#A8504A" }} />
-                          </div>
-                          <span style={{ fontSize: 11, color: as.rate < 60 ? "#A8504A" : "var(--mute)", fontWeight: as.rate < 60 ? 600 : 400 }}>
-                            {as.rate}%{as.rate < 60 ? " ⚠" : ""}
-                          </span>
-                        </div>
+          {/* Stress-Activity Correlation */}
+          {data.length > 0 && activities.length > 0 && (
+            <div className="paper fu" style={{ padding: "22px" }}>
+              <div className="st" style={{ fontSize: 19, marginBottom: 6 }}>
+                Lifestyle-Stress Correlation
+              </div>
+              <p
+                style={{
+                  fontSize: 12,
+                  color: "var(--mute)",
+                  fontStyle: "italic",
+                  marginBottom: 14,
+                }}
+              >
+                How your routine consistency may relate to your stress levels
+              </p>
+              <div style={{ display: "flex", gap: 14 }}>
+                {Object.entries(PIL).map(([pillar, pilObj]) => {
+                  const stats = calcPillarStats(activities, pillar);
+                  if (!stats) return null;
+                  const latScore = data[data.length - 1]?.score || 0;
+                  const impact =
+                    stats.consistency >= 70
+                      ? "positive"
+                      : stats.consistency >= 40
+                        ? "neutral"
+                        : "needs attention";
+                  const impColor =
+                    impact === "positive"
+                      ? "#7A9A78"
+                      : impact === "neutral"
+                        ? "#A88040"
+                        : "#A8504A";
+                  return (
+                    <div
+                      key={pillar}
+                      style={{
+                        flex: 1,
+                        padding: 14,
+                        borderRadius: 12,
+                        textAlign: "center",
+                        background: `${pilObj.c}10`,
+                        border: `1px solid ${pilObj.c}25`,
+                      }}
+                    >
+                      <Ico n={pilObj.ico} s={18} c={pilObj.d} sw={1.8} />
+                      <div
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 500,
+                          color: "var(--brown)",
+                          marginTop: 6,
+                        }}
+                      >
+                        {pillar}
                       </div>
-                    ))}
-                  </div>
-                );
-              })}
+                      <div
+                        style={{
+                          fontSize: 20,
+                          fontFamily: "'Playfair Display',serif",
+                          fontWeight: 600,
+                          color: impColor,
+                          marginTop: 4,
+                        }}
+                      >
+                        {stats.consistency}%
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 10,
+                          color: impColor,
+                          fontStyle: "italic",
+                          marginTop: 2,
+                          textTransform: "capitalize",
+                        }}
+                      >
+                        {impact}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
-        </div>
-
-        {/* Stress-Activity Correlation */}
-        {data.length > 0 && activities.length > 0 && (
-          <div className="paper fu" style={{ padding: "22px" }}>
-            <div className="st" style={{ fontSize: 19, marginBottom: 6 }}>Lifestyle-Stress Correlation</div>
-            <p style={{ fontSize: 12, color: "var(--mute)", fontStyle: "italic", marginBottom: 14 }}>
-              How your routine consistency may relate to your stress levels
-            </p>
-            <div style={{ display: "flex", gap: 14 }}>
-              {Object.entries(PIL).map(([pillar, pilObj]) => {
-                const stats = calcPillarStats(activities, pillar);
-                if (!stats) return null;
-                const latScore = data[data.length - 1]?.score || 0;
-                const impact = stats.consistency >= 70 ? "positive" : stats.consistency >= 40 ? "neutral" : "needs attention";
-                const impColor = impact === "positive" ? "#7A9A78" : impact === "neutral" ? "#A88040" : "#A8504A";
-                return (
-                  <div key={pillar} style={{
-                    flex: 1, padding: 14, borderRadius: 12, textAlign: "center",
-                    background: `${pilObj.c}10`, border: `1px solid ${pilObj.c}25`,
-                  }}>
-                    <Ico n={pilObj.ico} s={18} c={pilObj.d} sw={1.8} />
-                    <div style={{ fontSize: 13, fontWeight: 500, color: "var(--brown)", marginTop: 6 }}>{pillar}</div>
-                    <div style={{ fontSize: 20, fontFamily: "'Playfair Display',serif", fontWeight: 600, color: impColor, marginTop: 4 }}>{stats.consistency}%</div>
-                    <div style={{ fontSize: 10, color: impColor, fontStyle: "italic", marginTop: 2, textTransform: "capitalize" }}>{impact}</div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </>)}
+        </>
+      )}
     </div>
   );
 };
@@ -3674,22 +4489,68 @@ const RecsV = ({ data, persona }) => {
 
 /* ── Chatbot (Manas) ── */
 /* Sentiment keyword lists for chat mood signals */
-const CRISIS_WORDS = ["suicide", "end my life", "kill myself", "can't go on", "want to die", "self harm", "hurt myself", "no reason to live"];
-const NEG_WORDS = ["anxious", "panic", "depressed", "hopeless", "worthless", "alone", "scared", "terrified", "exhausted", "overwhelmed", "can't cope", "breaking down", "falling apart", "numb", "empty", "suffering", "miserable", "hate myself", "useless", "trapped", "helpless", "crying", "breakdown"];
+const CRISIS_WORDS = [
+  "suicide",
+  "end my life",
+  "kill myself",
+  "can't go on",
+  "want to die",
+  "self harm",
+  "hurt myself",
+  "no reason to live",
+];
+const NEG_WORDS = [
+  "anxious",
+  "panic",
+  "depressed",
+  "hopeless",
+  "worthless",
+  "alone",
+  "scared",
+  "terrified",
+  "exhausted",
+  "overwhelmed",
+  "can't cope",
+  "breaking down",
+  "falling apart",
+  "numb",
+  "empty",
+  "suffering",
+  "miserable",
+  "hate myself",
+  "useless",
+  "trapped",
+  "helpless",
+  "crying",
+  "breakdown",
+];
 const classifySentiment = (text) => {
   const t = text.toLowerCase();
-  if (CRISIS_WORDS.some(w => t.includes(w))) return { score: 48, level: "High", trigger: "crisis" };
-  if (NEG_WORDS.some(w => t.includes(w))) return { score: 30, level: "Moderate", trigger: "emotional" };
-  return null;// No signal for neutral messages
+  if (CRISIS_WORDS.some((w) => t.includes(w)))
+    return { score: 48, level: "High", trigger: "crisis" };
+  if (NEG_WORDS.some((w) => t.includes(w)))
+    return { score: 30, level: "Moderate", trigger: "emotional" };
+  return null; // No signal for neutral messages
 };
 
-const ChatV = ({ data, user, chatMsgs, setChatMsgs, activities, persona, addChatMood }) => {
+const ChatV = ({
+  data,
+  user,
+  chatMsgs,
+  setChatMsgs,
+  activities,
+  persona,
+  addChatMood,
+  addChatMsg,
+}) => {
   const lat = data[data.length - 1];
   const defaultGreeting = {
     role: "assistant",
     content: `Namaste, ${user.name}\n\nI am Manas — a gentle companion for your inner world, here within Mansik. I am here to listen without judgment, to help you reflect, and to walk beside you through whatever you are carrying today.\n\n${lat ? `I noticed your most recent reflection showed ${lat.severity.toLowerCase()} stress. ` : ""}How are you feeling right now?`,
   };
-  const [msgs, setMsgs] = useState(chatMsgs && chatMsgs.length > 0 ? chatMsgs : [defaultGreeting]);
+  const [msgs, setMsgs] = useState(
+    chatMsgs && chatMsgs.length > 0 ? chatMsgs : [defaultGreeting],
+  );
   const [inp, setInp] = useState(""),
     [busy, setBusy] = useState(false),
     [esc, setEsc] = useState(false);
@@ -3726,8 +4587,10 @@ const ChatV = ({ data, user, chatMsgs, setChatMsgs, activities, persona, addChat
     try {
       const pos = await new Promise((resolve, reject) =>
         navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true, timeout: 10000, maximumAge: 60000
-        })
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000,
+        }),
       );
       setLocStatus("granted");
       const { latitude: lat2, longitude: lng2 } = pos.coords;
@@ -3737,7 +4600,12 @@ const ChatV = ({ data, user, chatMsgs, setChatMsgs, activities, persona, addChat
         return;
       }
       // Use Google Places Nearby Search REST API via proxy or direct
-      const queries = ["mental health clinic", "psychologist", "therapist", "counseling center"];
+      const queries = [
+        "mental health clinic",
+        "psychologist",
+        "therapist",
+        "counseling center",
+      ];
       const allResults = [];
       for (const q of queries.slice(0, 2)) {
         try {
@@ -3748,7 +4616,15 @@ const ChatV = ({ data, user, chatMsgs, setChatMsgs, activities, persona, addChat
             const { Place } = await window.google.maps.importLibrary("places");
             const request = {
               textQuery: q + " near me",
-              fields: ["displayName", "formattedAddress", "nationalPhoneNumber", "rating", "userRatingCount", "location", "googleMapsURI"],
+              fields: [
+                "displayName",
+                "formattedAddress",
+                "nationalPhoneNumber",
+                "rating",
+                "userRatingCount",
+                "location",
+                "googleMapsURI",
+              ],
               locationBias: {
                 circle: { center: { lat: lat2, lng: lng2 }, radius: 10000 },
               },
@@ -3756,8 +4632,13 @@ const ChatV = ({ data, user, chatMsgs, setChatMsgs, activities, persona, addChat
             };
             const { places } = await Place.searchByText(request);
             if (places) {
-              places.forEach(p => {
-                const dist = haversine(lat2, lng2, p.location?.lat(), p.location?.lng());
+              places.forEach((p) => {
+                const dist = haversine(
+                  lat2,
+                  lng2,
+                  p.location?.lat(),
+                  p.location?.lng(),
+                );
                 allResults.push({
                   name: p.displayName,
                   address: p.formattedAddress || "",
@@ -3765,16 +4646,20 @@ const ChatV = ({ data, user, chatMsgs, setChatMsgs, activities, persona, addChat
                   rating: p.rating || 0,
                   reviews: p.userRatingCount || 0,
                   distance: dist,
-                  mapsUrl: p.googleMapsURI || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.displayName)}`,
+                  mapsUrl:
+                    p.googleMapsURI ||
+                    `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.displayName)}`,
                 });
               });
             }
           }
-        } catch(e2) { console.warn("Places search error:", e2); }
+        } catch (e2) {
+          console.warn("Places search error:", e2);
+        }
       }
       // Dedupe by name
       const seen = new Set();
-      const unique = allResults.filter(r => {
+      const unique = allResults.filter((r) => {
         const k = r.name?.toLowerCase();
         if (seen.has(k)) return false;
         seen.add(k);
@@ -3791,28 +4676,62 @@ const ChatV = ({ data, user, chatMsgs, setChatMsgs, activities, persona, addChat
   // Haversine distance (km)
   const haversine = (lat1, lon1, lat2, lon2) => {
     if (!lat2 || !lon2) return 999;
-    const R = 6371, dLat = (lat2 - lat1) * Math.PI / 180, dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+    const R = 6371,
+      dLat = ((lat2 - lat1) * Math.PI) / 180,
+      dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) ** 2;
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   };
 
   // National helplines fallback
   const HELPLINES = [
-    { name: "iCall (TISS Mumbai)", phone: "9152987821", desc: "Mon-Sat, 8am-10pm", panIndia: true },
-    { name: "Vandrevala Foundation", phone: "1860-2662-345", desc: "24/7, All languages", panIndia: true },
-    { name: "NIMHANS Helpline", phone: "080-46110007", desc: "24/7 Mental Health", panIndia: true },
-    { name: "Snehi", phone: "044-24640050", desc: "24/7 Emotional Support", panIndia: true },
-    { name: "AASRA", phone: "9820466726", desc: "24/7 Crisis Intervention", panIndia: true },
+    {
+      name: "iCall (TISS Mumbai)",
+      phone: "9152987821",
+      desc: "Mon-Sat, 8am-10pm",
+      panIndia: true,
+    },
+    {
+      name: "Vandrevala Foundation",
+      phone: "1860-2662-345",
+      desc: "24/7, All languages",
+      panIndia: true,
+    },
+    {
+      name: "NIMHANS Helpline",
+      phone: "080-46110007",
+      desc: "24/7 Mental Health",
+      panIndia: true,
+    },
+    {
+      name: "Snehi",
+      phone: "044-24640050",
+      desc: "24/7 Emotional Support",
+      panIndia: true,
+    },
+    {
+      name: "AASRA",
+      phone: "9820466726",
+      desc: "24/7 Crisis Intervention",
+      panIndia: true,
+    },
   ];
 
   // Build activity context for the AI
   const activityContext = (() => {
-    if (!activities || activities.length === 0) return "No daily routines logged yet.";
-    const lines = activities.map(a => {
-      const completions = Object.values(a.completionLog || {}).filter(Boolean).length;
+    if (!activities || activities.length === 0)
+      return "No daily routines logged yet.";
+    const lines = activities.map((a) => {
+      const completions = Object.values(a.completionLog || {}).filter(
+        Boolean,
+      ).length;
       const total = Object.keys(a.completionLog || {}).length;
       const rate = total > 0 ? Math.round((completions / total) * 100) : 0;
-      return `- ${a.name} (${a.pillar}): ${a.startTime}–${a.endTime} on ${a.days.map(d=>d.slice(0,3)).join(",")} | Completion: ${completions}/${total} (${rate}%)`;
+      return `- ${a.name} (${a.pillar}): ${a.startTime}–${a.endTime} on ${a.days.map((d) => d.slice(0, 3)).join(",")} | Completion: ${completions}/${total} (${rate}%)`;
     });
     return lines.join("\n");
   })();
@@ -3820,25 +4739,40 @@ const ChatV = ({ data, user, chatMsgs, setChatMsgs, activities, persona, addChat
   // Build pillar consistency summary
   const pillarSummary = (() => {
     if (!activities || activities.length === 0) return "";
-    const pillars = [...new Set(activities.map(a => a.pillar))];
-    return pillars.map(p => {
-      const stats = calcPillarStats(activities, p);
-      if (!stats) return "";
-      const flag = stats.consistency < 60 ? " ⚠ IRREGULAR — needs attention" : stats.consistency >= 80 ? " ✓ Consistent" : " ~ Moderate";
-      return `${p}: ${stats.consistency}% consistency, streak: ${stats.currentStreak} days${flag}`;
-    }).filter(Boolean).join("\n");
+    const pillars = [...new Set(activities.map((a) => a.pillar))];
+    return pillars
+      .map((p) => {
+        const stats = calcPillarStats(activities, p);
+        if (!stats) return "";
+        const flag =
+          stats.consistency < 60
+            ? " ⚠ IRREGULAR — needs attention"
+            : stats.consistency >= 80
+              ? " ✓ Consistent"
+              : " ~ Moderate";
+        return `${p}: ${stats.consistency}% consistency, streak: ${stats.currentStreak} days${flag}`;
+      })
+      .filter(Boolean)
+      .join("\n");
   })();
 
   // Stress-activity correlation
   const stressCorrelation = (() => {
     if (data.length < 2 || !activities || activities.length === 0) return "";
     const recent = data.slice(-3);
-    const trend = recent.length >= 2 && recent[recent.length-1].score > recent[0].score ? "increasing" : recent[recent.length-1].score < recent[0].score ? "decreasing" : "stable";
-    const lowConsistency = [...new Set(activities.map(a => a.pillar))].filter(p => {
-      const stats = calcPillarStats(activities, p);
-      return stats && stats.consistency < 50;
-    });
-    let correlation = `Stress trend: ${trend} (${recent.map(r => r.score).join(" → ")}).`;
+    const trend =
+      recent.length >= 2 && recent[recent.length - 1].score > recent[0].score
+        ? "increasing"
+        : recent[recent.length - 1].score < recent[0].score
+          ? "decreasing"
+          : "stable";
+    const lowConsistency = [...new Set(activities.map((a) => a.pillar))].filter(
+      (p) => {
+        const stats = calcPillarStats(activities, p);
+        return stats && stats.consistency < 50;
+      },
+    );
+    let correlation = `Stress trend: ${trend} (${recent.map((r) => r.score).join(" → ")}).`;
     if (lowConsistency.length > 0 && trend === "increasing") {
       correlation += ` Low consistency in [${lowConsistency.join(", ")}] may be contributing to rising stress.`;
     }
@@ -3874,7 +4808,14 @@ ${pillarSummary || "No data yet"}
 
 ${stressCorrelation ? `Stress-Lifestyle Correlation:\n${stressCorrelation}` : ""}
 
-${persona ? `Life Pillars configured: ${Object.entries(persona).filter(([,v]) => v.length > 0).map(([k,v]) => `${k}(${v.join(", ")})`).join(" · ")}` : ""}
+${
+  persona
+    ? `Life Pillars configured: ${Object.entries(persona)
+        .filter(([, v]) => v.length > 0)
+        .map(([k, v]) => `${k}(${v.join(", ")})`)
+        .join(" · ")}`
+    : ""
+}
 
 Important:
 - Never diagnose. Never prescribe.
@@ -3936,13 +4877,12 @@ Important:
 
       const d = await r.json();
 
-      setMsgs((p) => [
-        ...p,
-        {
-          role: "assistant",
-          content: d.choices?.[0]?.message?.content || "Try again",
-        },
-      ]);
+      const assistantContent = d.choices?.[0]?.message?.content || "Try again";
+      setMsgs((p) => [...p, { role: "assistant", content: assistantContent }]);
+      if (addChatMsg) {
+        addChatMsg("user", u).catch(console.error);
+        addChatMsg("assistant", assistantContent).catch(console.error);
+      }
     } catch {
       setMsgs((p) => [
         ...p,
@@ -4063,18 +5003,53 @@ Important:
           >
             <Ico n="alert" s={18} c="var(--rose)" sw={1.8} />
             <p
-              style={{ fontSize: 13, color: "var(--rose)", fontStyle: "italic", flex: 1 }}
+              style={{
+                fontSize: 13,
+                color: "var(--rose)",
+                fontStyle: "italic",
+                flex: 1,
+              }}
             >
               You are not alone. If you are in crisis, please reach out:{" "}
-              <a href="tel:9152987821" style={{ color: "var(--rose)", fontWeight: 700, textDecoration: "none" }}>iCall 9152987821</a> ·{" "}
-              <a href="tel:18602662345" style={{ color: "var(--rose)", fontWeight: 700, textDecoration: "none" }}>Vandrevala 1860-2662-345</a>
+              <a
+                href="tel:9152987821"
+                style={{
+                  color: "var(--rose)",
+                  fontWeight: 700,
+                  textDecoration: "none",
+                }}
+              >
+                iCall 9152987821
+              </a>{" "}
+              ·{" "}
+              <a
+                href="tel:18602662345"
+                style={{
+                  color: "var(--rose)",
+                  fontWeight: 700,
+                  textDecoration: "none",
+                }}
+              >
+                Vandrevala 1860-2662-345
+              </a>
             </p>
-            <button data-h onClick={() => { setShowNearby(!showNearby); if (!showNearby) searchNearbyCenters(); }}
+            <button
+              data-h
+              onClick={() => {
+                setShowNearby(!showNearby);
+                if (!showNearby) searchNearbyCenters();
+              }}
               style={{
-                padding: "6px 14px", borderRadius: 20, fontSize: 11, fontFamily: "'Lora',serif",
-                border: "1.5px solid rgba(168,80,74,.35)", cursor: "pointer", flexShrink: 0,
+                padding: "6px 14px",
+                borderRadius: 20,
+                fontSize: 11,
+                fontFamily: "'Lora',serif",
+                border: "1.5px solid rgba(168,80,74,.35)",
+                cursor: "pointer",
+                flexShrink: 0,
                 background: showNearby ? "rgba(168,80,74,.12)" : "transparent",
-                color: "var(--rose)", transition: "all .3s",
+                color: "var(--rose)",
+                transition: "all .3s",
               }}
             >
               {showNearby ? "Hide" : "Find Nearby Help"}
@@ -4083,16 +5058,40 @@ Important:
 
           {/* Nearby centers panel */}
           {showNearby && (
-            <div className="paper" style={{ padding: "18px 20px", marginBottom: 4, maxHeight: 280, overflowY: "auto" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+            <div
+              className="paper"
+              style={{
+                padding: "18px 20px",
+                marginBottom: 4,
+                maxHeight: 280,
+                overflowY: "auto",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: 12,
+                }}
+              >
                 <div className="st" style={{ fontSize: 15 }}>
-                  {locStatus === "loading" ? "Locating you..." :
-                   locStatus === "denied" ? "Location access denied" :
-                   nearbyCenters.length > 0 ? `${nearbyCenters.length} centers near you` :
-                   "Professional Help"}
+                  {locStatus === "loading"
+                    ? "Locating you..."
+                    : locStatus === "denied"
+                      ? "Location access denied"
+                      : nearbyCenters.length > 0
+                        ? `${nearbyCenters.length} centers near you`
+                        : "Professional Help"}
                 </div>
                 {locStatus === "denied" && (
-                  <span style={{ fontSize: 11, color: "var(--mute)", fontStyle: "italic" }}>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      color: "var(--mute)",
+                      fontStyle: "italic",
+                    }}
+                  >
                     Enable location for nearby results
                   </span>
                 )}
@@ -4100,50 +5099,134 @@ Important:
 
               {/* Loading spinner */}
               {locStatus === "loading" && (
-                <div style={{ textAlign: "center", padding: "16px 0", color: "var(--mute)", fontSize: 13 }}>
-                  <div style={{ width: 24, height: 24, border: "2.5px solid rgba(200,170,150,.25)", borderTopColor: "var(--rose)", borderRadius: "50%", margin: "0 auto 8px", animation: "spin 1s linear infinite" }} />
+                <div
+                  style={{
+                    textAlign: "center",
+                    padding: "16px 0",
+                    color: "var(--mute)",
+                    fontSize: 13,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 24,
+                      height: 24,
+                      border: "2.5px solid rgba(200,170,150,.25)",
+                      borderTopColor: "var(--rose)",
+                      borderRadius: "50%",
+                      margin: "0 auto 8px",
+                      animation: "spin 1s linear infinite",
+                    }}
+                  />
                   Searching for mental health professionals near you...
                 </div>
               )}
 
               {/* Nearby results */}
               {nearbyCenters.length > 0 && (
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 8 }}
+                >
                   {nearbyCenters.map((c, i) => (
-                    <div key={i} style={{
-                      display: "flex", alignItems: "center", gap: 12, padding: "10px 14px",
-                      borderRadius: 12, background: "rgba(255,250,244,.7)",
-                      border: "1px solid rgba(200,170,150,.15)", transition: "all .3s",
-                    }}>
-                      <div style={{
-                        width: 36, height: 36, borderRadius: 10,
-                        background: "linear-gradient(135deg,rgba(168,80,74,.12),rgba(168,80,74,.06))",
-                        display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                      }}>
+                    <div
+                      key={i}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 12,
+                        padding: "10px 14px",
+                        borderRadius: 12,
+                        background: "rgba(255,250,244,.7)",
+                        border: "1px solid rgba(200,170,150,.15)",
+                        transition: "all .3s",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: 10,
+                          background:
+                            "linear-gradient(135deg,rgba(168,80,74,.12),rgba(168,80,74,.06))",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                        }}
+                      >
                         <Ico n="brain" s={16} c="var(--rose)" sw={1.6} />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 13, fontFamily: "'Lora',serif", fontWeight: 500, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        <div
+                          style={{
+                            fontSize: 13,
+                            fontFamily: "'Lora',serif",
+                            fontWeight: 500,
+                            color: "var(--text)",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
                           {c.name}
                         </div>
-                        <div style={{ fontSize: 11, color: "var(--mute)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        <div
+                          style={{
+                            fontSize: 11,
+                            color: "var(--mute)",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
                           {c.address}
                         </div>
                         {c.phone && (
-                          <a href={`tel:${c.phone.replace(/[^0-9+]/g, "")}`} style={{ fontSize: 11, color: "var(--rose)", textDecoration: "none", fontWeight: 500 }}>
+                          <a
+                            href={`tel:${c.phone.replace(/[^0-9+]/g, "")}`}
+                            style={{
+                              fontSize: 11,
+                              color: "var(--rose)",
+                              textDecoration: "none",
+                              fontWeight: 500,
+                            }}
+                          >
                             📞 {c.phone}
                           </a>
                         )}
                       </div>
                       <div style={{ textAlign: "right", flexShrink: 0 }}>
                         {c.rating > 0 && (
-                          <div style={{ fontSize: 12, color: "#A88040", fontWeight: 500 }}>
-                            ★ {c.rating.toFixed(1)} <span style={{ fontSize: 10, color: "var(--mute)" }}>({c.reviews})</span>
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: "#A88040",
+                              fontWeight: 500,
+                            }}
+                          >
+                            ★ {c.rating.toFixed(1)}{" "}
+                            <span
+                              style={{ fontSize: 10, color: "var(--mute)" }}
+                            >
+                              ({c.reviews})
+                            </span>
                           </div>
                         )}
-                        <div style={{ fontSize: 10, color: "var(--mute)" }}>{c.distance < 999 ? `${c.distance.toFixed(1)} km` : ""}</div>
-                        <a href={c.mapsUrl} target="_blank" rel="noopener noreferrer"
-                          style={{ fontSize: 10, color: "var(--rose)", textDecoration: "none" }}>
+                        <div style={{ fontSize: 10, color: "var(--mute)" }}>
+                          {c.distance < 999
+                            ? `${c.distance.toFixed(1)} km`
+                            : ""}
+                        </div>
+                        <a
+                          href={c.mapsUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            fontSize: 10,
+                            color: "var(--rose)",
+                            textDecoration: "none",
+                          }}
+                        >
                           Directions →
                         </a>
                       </div>
@@ -4154,25 +5237,73 @@ Important:
 
               {/* Fallback helplines — always shown */}
               <div style={{ marginTop: nearbyCenters.length > 0 ? 14 : 0 }}>
-                {(nearbyCenters.length === 0 || locStatus === "denied" || locStatus === "error") && (
-                  <div style={{ fontSize: 12, color: "var(--mute)", fontStyle: "italic", marginBottom: 8 }}>
-                    {locStatus === "denied" ? "Please enable location access in your browser to see nearby centers. Meanwhile, here are national helplines:" : "National helplines available 24/7:"}
+                {(nearbyCenters.length === 0 ||
+                  locStatus === "denied" ||
+                  locStatus === "error") && (
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: "var(--mute)",
+                      fontStyle: "italic",
+                      marginBottom: 8,
+                    }}
+                  >
+                    {locStatus === "denied"
+                      ? "Please enable location access in your browser to see nearby centers. Meanwhile, here are national helplines:"
+                      : "National helplines available 24/7:"}
                   </div>
                 )}
-                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 6 }}
+                >
                   {HELPLINES.map((h, i) => (
-                    <div key={i} style={{
-                      display: "flex", alignItems: "center", justifyContent: "space-between",
-                      padding: "8px 12px", borderRadius: 10,
-                      background: i === 0 ? "rgba(168,80,74,.08)" : "rgba(200,170,150,.06)",
-                      border: "1px solid rgba(200,170,150,.1)",
-                    }}>
+                    <div
+                      key={i}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "8px 12px",
+                        borderRadius: 10,
+                        background:
+                          i === 0
+                            ? "rgba(168,80,74,.08)"
+                            : "rgba(200,170,150,.06)",
+                        border: "1px solid rgba(200,170,150,.1)",
+                      }}
+                    >
                       <div>
-                        <div style={{ fontSize: 12, fontWeight: 500, color: "var(--text)" }}>{h.name}</div>
-                        <div style={{ fontSize: 10, color: "var(--mute)", fontStyle: "italic" }}>{h.desc}</div>
+                        <div
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 500,
+                            color: "var(--text)",
+                          }}
+                        >
+                          {h.name}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 10,
+                            color: "var(--mute)",
+                            fontStyle: "italic",
+                          }}
+                        >
+                          {h.desc}
+                        </div>
                       </div>
-                      <a href={`tel:${h.phone.replace(/[^0-9+]/g, "")}`}
-                        style={{ fontSize: 13, color: "var(--rose)", fontWeight: 600, textDecoration: "none", padding: "4px 12px", borderRadius: 16, background: "rgba(168,80,74,.1)" }}>
+                      <a
+                        href={`tel:${h.phone.replace(/[^0-9+]/g, "")}`}
+                        style={{
+                          fontSize: 13,
+                          color: "var(--rose)",
+                          fontWeight: 600,
+                          textDecoration: "none",
+                          padding: "4px 12px",
+                          borderRadius: 16,
+                          background: "rgba(168,80,74,.1)",
+                        }}
+                      >
                         📞 {h.phone}
                       </a>
                     </div>
@@ -4376,79 +5507,61 @@ Important:
 /* ══ Root ══ */
 export default function Mansik({ firebaseUser }) {
   const [user, setUser] = useState(
-    firebaseUser ? { name: firebaseUser.displayName || firebaseUser.email.split("@")[0], email: firebaseUser.email } : null
-  ),
+      firebaseUser
+        ? {
+            name: firebaseUser.displayName || firebaseUser.email.split("@")[0],
+            email: firebaseUser.email,
+          }
+        : null,
+    ),
     [view, setView] = useState("dash");
 
-  // ── Persisted assessment data ──
-  const [data, setData] = useState(() => {
-    if (firebaseUser?.email) {
-      try {
-        const saved = localStorage.getItem(`mansik_assessments_${firebaseUser.email}`);
-        return saved ? JSON.parse(saved) : HIST;
-      } catch { return HIST; }
-    }
-    return HIST;
-  });
+  // ── Firestore hooks ──
+  const { assessments, addAssessment } = useAssessments();
+  const { persona: firestorePersona, updatePersona } = usePersona();
+  const {
+    activities: firestoreActivities,
+    addActivity: addActivityFS,
+    updateActivity,
+    deleteActivity,
+  } = useActivities();
+  const { messages: chatMsgsFS, addMessage: addChatMsg } = useChatHistory();
+  const data = assessments;
 
   // ── Persisted custom display name ──
   const [displayName, setDisplayName] = useState(() => {
     if (firebaseUser?.email) {
-      return localStorage.getItem(`mansik_displayName_${firebaseUser.email}`) 
-        || firebaseUser.displayName 
-        || firebaseUser.email.split("@")[0];
+      return (
+        localStorage.getItem(`mansik_displayName_${firebaseUser.email}`) ||
+        firebaseUser.displayName ||
+        firebaseUser.email.split("@")[0]
+      );
     }
     return "";
   });
 
-  // ── Persisted chat messages ──
-  const [chatMsgs, setChatMsgs] = useState(() => {
-    if (firebaseUser?.email) {
-      try {
-        const saved = localStorage.getItem(`mansik_chat_${firebaseUser.email}`);
-        return saved ? JSON.parse(saved) : null;
-      } catch { return null; }
-    }
-    return null;
-  });
+  // chatMood stays local
+  const [chatMood, setChatMood] = useState([]);
+  const addChatMood = (signal) => setChatMood((prev) => [...prev, signal]);
 
-  // ── Persisted daily activities ──
-  const [activities, setActivities] = useState(() => {
-    if (firebaseUser?.email) {
-      try {
-        const saved = localStorage.getItem(`mansik_activities_${firebaseUser.email}`);
-        return saved ? JSON.parse(saved) : [];
-      } catch { return []; }
-    }
-    return [];
-  });
+  // Firestore aliases
+  const persona = firestorePersona;
+  const activities = firestoreActivities;
+  const chatMsgs = chatMsgsFS;
+  const setChatMsgs = () => {};
 
-  // ── Persisted chat mood signals ──
-  const [chatMood, setChatMood] = useState(() => {
-    if (firebaseUser?.email) {
-      try {
-        const saved = localStorage.getItem(`mansik_chatMood_${firebaseUser.email}`);
-        return saved ? JSON.parse(saved) : [];
-      } catch { return []; }
-    }
-    return [];
-  });
-  const addChatMood = (signal) => setChatMood(prev => [...prev, signal]);
-
-  const [persona, setPersona] = useState({
-    Health: [],
-    Habit: [],
-    Relationship: [],
-    Occupation: [],
-    Entertainment: [],
-    Liability: [],
-  });
-  const [isPersonaLoaded, setIsPersonaLoaded] = useState(false);
+  const setPersona = (updaterOrValue) => {
+    const newVal =
+      typeof updaterOrValue === "function"
+        ? updaterOrValue(persona)
+        : updaterOrValue;
+    updatePersona(newVal).catch(console.error);
+  };
 
   // Keep user.name in sync with displayName
   useEffect(() => {
     if (user && displayName) {
-      setUser(prev => prev ? { ...prev, name: displayName } : prev);
+      setUser((prev) => (prev ? { ...prev, name: displayName } : prev));
     }
   }, [displayName]);
 
@@ -4459,58 +5572,37 @@ export default function Mansik({ firebaseUser }) {
     }
   }, [displayName, user?.email]);
 
-  // Persist assessment data
+  // ── One-time migration localStorage → Firestore ──
   useEffect(() => {
-    if (user?.email && data.length > 0) {
-      localStorage.setItem(`mansik_assessments_${user.email}`, JSON.stringify(data));
-    }
-  }, [data, user?.email]);
-
-  // Persist chat messages
-  useEffect(() => {
-    if (user?.email && chatMsgs && chatMsgs.length > 0) {
-      localStorage.setItem(`mansik_chat_${user.email}`, JSON.stringify(chatMsgs));
-    }
-  }, [chatMsgs, user?.email]);
-
-  // Persist activities
-  useEffect(() => {
-    if (user?.email) {
-      localStorage.setItem(`mansik_activities_${user.email}`, JSON.stringify(activities));
-    }
-  }, [activities, user?.email]);
-
-  // Persist chat mood
-  useEffect(() => {
-    if (user?.email && chatMood.length > 0) {
-      localStorage.setItem(`mansik_chatMood_${user.email}`, JSON.stringify(chatMood));
-    }
-  }, [chatMood, user?.email]);
-
-  // Load persona from localStorage
-  useEffect(() => {
-    if (user?.email) {
-      const saved = localStorage.getItem(`mansik_persona_${user.email}`);
-      if (saved) {
-        try {
-          setPersona(JSON.parse(saved));
-        } catch (e) {
-          console.error("Failed to parse persona", e);
-        }
+    if (!firebaseUser?.email) return;
+    const { hasAny } = hasLocalStorageData(firebaseUser.email);
+    if (!hasAny) return;
+    const {
+      assessments: localA,
+      persona: localP,
+      activities: localAct,
+    } = getLocalStorageData(firebaseUser.email);
+    (async () => {
+      try {
+        for (const a of localA) await addAssessment(a);
+        if (Object.keys(localP).length) await updatePersona(localP);
+        for (const act of localAct) await addActivityFS(act);
+        clearLocalStorageData(firebaseUser.email);
+        console.log("✅ Migration complete");
+      } catch (e) {
+        console.error("Migration failed:", e);
       }
-      setIsPersonaLoaded(true);
-    }
-  }, [user?.email]);
+    })();
+  }, [firebaseUser?.email]);
 
-  useEffect(() => {
-    if (user?.email && isPersonaLoaded) {
-      localStorage.setItem(`mansik_persona_${user.email}`, JSON.stringify(persona));
+  const addA = async (a) => {
+    try {
+      await addAssessment(a);
+      setView("analytics");
+    } catch (err) {
+      console.error("Failed to save:", err);
+      alert("Could not save assessment. Please try again.");
     }
-  }, [persona, user?.email, isPersonaLoaded]);
-
-  const addA = (a) => {
-    setData((p) => [...p, a]);
-    setView("analytics");
   };
   const lat = data[data.length - 1];
   if (!user)
@@ -4525,8 +5617,29 @@ export default function Mansik({ firebaseUser }) {
     dash: <Dash user={user} data={data} persona={persona} />,
     assess: <Assess onSubmit={addA} data={data} />,
     analytics: <Anlyt data={data} chatMood={chatMood} />,
-    persona: <Pers persona={persona} setPersona={setPersona} activities={activities} setActivities={setActivities} data={data} />,
-    chat: <ChatV data={data} user={user} chatMsgs={chatMsgs} setChatMsgs={setChatMsgs} activities={activities} persona={persona} addChatMood={addChatMood} />,
+    persona: (
+      <Pers
+        persona={persona}
+        setPersona={setPersona}
+        activities={activities}
+        addActivityFS={addActivityFS}
+        updateActivity={updateActivity}
+        deleteActivity={deleteActivity}
+        data={data}
+      />
+    ),
+    chat: (
+      <ChatV
+        data={data}
+        user={user}
+        chatMsgs={chatMsgs}
+        setChatMsgs={setChatMsgs}
+        activities={activities}
+        persona={persona}
+        addChatMood={addChatMood}
+        addChatMsg={addChatMsg}
+      />
+    ),
     recs: <RecsV data={data} persona={persona} />,
   };
   return (
