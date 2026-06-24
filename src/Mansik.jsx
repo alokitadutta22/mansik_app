@@ -554,6 +554,7 @@ const NAV = [
   { id: "persona", ico: "dna", icoC: "#9B8FB0", l: "My Persona" },
   { id: "chat", ico: "msg", icoC: "#B8837C", l: "Manas — AI" },
   { id: "recs", ico: "star", icoC: "#C4A45A", l: "Guidance" },
+  { id: "soundlull", ico: "music", icoC: "#7EB8A4", l: "Soundlull" },
 ];
 
 /* ── Auth ── */
@@ -5640,7 +5641,36 @@ export default function Mansik({ firebaseUser }) {
         addChatMsg={addChatMsg}
       />
     ),
-    recs: <RecsV data={data} persona={persona} />,
+
+recs: <RecsV data={data} persona={persona} />,
+    soundlull: (
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 24, padding: 40 }}>
+        <div style={{ fontSize: 48 }}>🎵</div>
+        <h2 style={{ color: "var(--brown)", fontFamily: "var(--serif)", margin: 0, fontSize: 26 }}>Soundlull — Music Therapy</h2>
+        <p style={{ color: "var(--soft)", textAlign: "center", maxWidth: 420, lineHeight: 1.7, margin: 0 }}>
+          Let healing sounds calm your mind. Soundlull uses music therapy to ease stress and restore inner peace.
+        </p>
+        <a
+          href="https://therapyapp-seven.vercel.app/"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            padding: "13px 32px",
+            background: "linear-gradient(135deg, #7EB8A4, #97AEC0)",
+            color: "#fff",
+            borderRadius: 40,
+            textDecoration: "none",
+            fontSize: 15,
+            fontWeight: 600,
+            letterSpacing: 0.4,
+            boxShadow: "0 4px 18px rgba(126,184,164,0.35)",
+          }}
+        >
+          Open Soundlull ↗
+        </a>
+        <p style={{ color: "var(--mute)", fontSize: 12, margin: 0 }}>Opens in a new tab — Mansik stays open</p>
+      </div>
+    ),
   };
   return (
     <>

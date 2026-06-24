@@ -3,15 +3,15 @@
    ═══════════════════════════════════════════ */
 
 :root {
-  --sage: #9CAF88;
-  --mint: #B8D4C8;
+  --sage: #6B8F5A;
+  --mint: #7AADA0;
   --cream: #F5F1E8;
   --sand: #E8DCC4;
   --clay: #C4A68A;
   --earth: #8B7355;
   --deep: #4A5F5C;
   --text: #3D4F4C;
-  --light-text: #6B7B78;
+  --light-text: #3D4F4C;
 }
 
 .landing-page {
