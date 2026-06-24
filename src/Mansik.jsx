@@ -195,6 +195,163 @@ const G = () => (
     /* Icon chip used in feature lists */
     .ico-chip{display:flex;align-items:center;justify-content:center;
       width:34px;height:34px;border-radius:10px;flex-shrink:0}
+
+    /* Responsive Layout Styles */
+    .app-container {
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar-container {
+      width: 228px;
+      flex-shrink: 0;
+    }
+    .sidebar-backdrop {
+      display: none;
+    }
+    .mobile-header {
+      display: none;
+    }
+    .view-container {
+      padding: 34px 38px;
+      margin: 0 auto;
+    }
+
+    /* Grids & Layouts */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      margin-bottom: 26px;
+    }
+    .dash-main-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 20px;
+    }
+    .insights-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 13px;
+      margin-bottom: 22px;
+    }
+    .insights-main-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    .severity-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+    .form-row-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .consistency-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .intro-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .chat-container {
+      padding: 34px 38px;
+      max-width: 780px;
+      margin: 0 auto;
+      height: calc(100vh - 40px);
+      display: flex;
+      flex-direction: column;
+    }
+
+    @media (max-width: 1024px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .insights-stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .app-container {
+        flex-direction: column;
+      }
+      .mobile-header {
+        display: flex !important;
+      }
+      .sidebar-container {
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        z-index: 1000;
+        width: 228px;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+      }
+      .sidebar-container.open {
+        transform: translateX(0);
+      }
+      .sidebar-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(4px);
+        z-index: 999;
+      }
+      .view-container {
+        padding: 20px 16px;
+      }
+      .dash-main-grid {
+        grid-template-columns: 1fr;
+      }
+      .insights-main-grid {
+        grid-template-columns: 1fr;
+      }
+      .consistency-grid {
+        grid-template-columns: 1fr;
+      }
+      .chat-container {
+        padding: 16px 14px;
+        height: calc(100vh - 56px);
+      }
+      .mobile-close-btn {
+        display: flex !important;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .insights-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .severity-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+      .insights-stats-grid {
+        grid-template-columns: 1fr;
+      }
+      .form-row-grid {
+        grid-template-columns: 1fr;
+      }
+      .intro-grid {
+        grid-template-columns: 1fr;
+      }
+    }
   `}</style>
 );
 
@@ -958,6 +1115,7 @@ const Sidebar = ({
   displayName,
   setDisplayName,
   onLogout,
+  onClose,
 }) => {
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(displayName || user.name);
@@ -987,6 +1145,32 @@ const Sidebar = ({
         backdropFilter: "blur(10px)",
       }}
     >
+      {/* Mobile Close Button */}
+      <div className="mobile-close-btn" style={{
+        display: "none",
+        justifyContent: "flex-end",
+        padding: "8px 12px 0",
+      }}>
+        <button
+          onClick={onClose}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            color: "var(--soft)",
+            padding: 4,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
       {/* Logo */}
       <div
         style={{
@@ -1240,7 +1424,7 @@ const Dash = ({ user, data, persona }) => {
   ];
 
   return (
-    <div style={{ padding: "34px 38px", maxWidth: 1080, margin: "0 auto" }}>
+    <div className="view-container" style={{ maxWidth: 1080 }}>
       <div className="fu" style={{ marginBottom: 34 }}>
         <div
           className="cv"
@@ -1324,14 +1508,7 @@ const Dash = ({ user, data, persona }) => {
         </div>
       )}
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4,1fr)",
-          gap: 15,
-          marginBottom: 26,
-        }}
-      >
+      <div className="stats-grid">
         {stats.map((s2, i) => (
           <div
             key={i}
@@ -1392,7 +1569,7 @@ const Dash = ({ user, data, persona }) => {
         ))}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 20 }}>
+      <div className="dash-main-grid">
         <div className="paper fu" style={{ padding: "24px 22px" }}>
           <div className="st" style={{ fontSize: 19, marginBottom: 3 }}>
             Stress Journey
@@ -1796,7 +1973,7 @@ const Assess = ({ onSubmit, data }) => {
 
   if (step === "intro")
     return (
-      <div style={{ padding: "34px 38px", maxWidth: 680, margin: "0 auto" }}>
+      <div className="view-container" style={{ maxWidth: 680 }}>
         <div
           className="paper-b fu"
           style={{
@@ -1871,14 +2048,7 @@ const Assess = ({ onSubmit, data }) => {
             <strong>past month</strong>. Take your time — there are no wrong
             answers.
           </p>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(3,1fr)",
-              gap: 12,
-              marginBottom: 28,
-            }}
-          >
+          <div className="intro-grid">
             {[
               ["14", "Questions"],
               ["5-point", "Scale"],
@@ -1972,7 +2142,7 @@ const Assess = ({ onSubmit, data }) => {
     );
 
   return (
-    <div style={{ padding: "34px 38px", maxWidth: 680, margin: "0 auto" }}>
+    <div className="view-container" style={{ maxWidth: 680 }}>
       <div className="fu" style={{ marginBottom: 24 }}>
         <div
           style={{
@@ -2247,7 +2417,7 @@ const Anlyt = ({ data, chatMood = [] }) => {
   ];
 
   return (
-    <div style={{ padding: "34px 38px", maxWidth: 1080, margin: "0 auto" }}>
+    <div className="view-container" style={{ maxWidth: 1080 }}>
       <div className="fu" style={{ marginBottom: 30 }}>
         <div
           className="cv"
@@ -2317,14 +2487,7 @@ const Anlyt = ({ data, chatMood = [] }) => {
           </div>
         </div>
       )}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(5,1fr)",
-          gap: 13,
-          marginBottom: 22,
-        }}
-      >
+      <div className="insights-stats-grid">
         {statRows.map((s2, i) => (
           <div
             key={i}
@@ -2379,14 +2542,7 @@ const Anlyt = ({ data, chatMood = [] }) => {
           </div>
         ))}
       </div>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "2fr 1fr",
-          gap: 20,
-          marginBottom: 20,
-        }}
-      >
+      <div className="insights-main-grid">
         <div className="paper fu" style={{ padding: "24px 22px" }}>
           <div className="st" style={{ fontSize: 19, marginBottom: 3 }}>
             Score Timeline & Thresholds
@@ -2484,13 +2640,7 @@ const Anlyt = ({ data, chatMood = [] }) => {
         <div className="st" style={{ fontSize: 19, marginBottom: 16 }}>
           Severity Distribution
         </div>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(3,1fr)",
-            gap: 14,
-          }}
-        >
+        <div className="severity-grid">
           {[
             ["Low", "#7A9A78", "rgba(196,205,184,.18)"],
             ["Moderate", "#A88040", "rgba(226,200,138,.18)"],
@@ -2784,7 +2934,9 @@ const Pers = ({
         upd = cur.includes(ag) ? cur.filter((x) => x !== ag) : [...cur, ag];
       return { ...p, [cat]: upd };
     });
-  const total = Object.values(persona).reduce((s, v) => s + v.length, 0);
+  const total = Object.values(persona)
+    .filter((v) => Array.isArray(v))
+    .reduce((s, v) => s + v.length, 0);
   const addActivity = async () => {
     if (!newAct.name.trim() || !newAct.days.length) return;
     const act = {
@@ -2816,7 +2968,7 @@ const Pers = ({
   const td = todayStr();
 
   return (
-    <div style={{ padding: "34px 38px", maxWidth: 960, margin: "0 auto" }}>
+    <div className="view-container" style={{ maxWidth: 960 }}>
       <div className="fu" style={{ marginBottom: 30 }}>
         <div
           className="cv"
@@ -2918,7 +3070,7 @@ const Pers = ({
                 }}
               >
                 Across{" "}
-                {Object.values(persona).filter((v) => v.length > 0).length} life
+                {Object.values(persona).filter((v) => Array.isArray(v) && v.length > 0).length} life
                 pillars
               </p>
             </div>
@@ -3109,7 +3261,7 @@ const Pers = ({
               </form>
             </div>
           </div>
-          {Object.values(persona).some((v) => v.length > 0) && (
+          {Object.values(persona).some((v) => Array.isArray(v) && v.length > 0) && (
             <div className="paper fu" style={{ padding: "22px" }}>
               <div className="st" style={{ fontSize: 19, marginBottom: 14 }}>
                 Your Configuration
@@ -3118,7 +3270,7 @@ const Pers = ({
                 style={{ display: "flex", flexDirection: "column", gap: 11 }}
               >
                 {Object.entries(persona)
-                  .filter(([, v]) => v.length > 0)
+                  .filter(([, v]) => Array.isArray(v) && v.length > 0)
                   .map(([cat, ags]) => (
                     <div
                       key={cat}
@@ -3345,14 +3497,7 @@ const Pers = ({
                   border: "1px solid rgba(200,170,150,.18)",
                 }}
               >
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: 12,
-                    marginBottom: 14,
-                  }}
-                >
+                <div className="form-row-grid">
                   <div>
                     <div
                       className="cv"
@@ -3400,14 +3545,7 @@ const Pers = ({
                     </select>
                   </div>
                 </div>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: 12,
-                    marginBottom: 14,
-                  }}
-                >
+                <div className="form-row-grid">
                   <div>
                     <div
                       className="cv"
@@ -3796,13 +3934,7 @@ const Pers = ({
                 Add daily routines to see your consistency analytics ✦
               </div>
             ) : (
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: 14,
-                }}
-              >
+              <div className="consistency-grid">
                 {Object.entries(PIL).map(([pillar, pilObj]) => {
                   const stats = calcPillarStats(activities, pillar);
                   if (!stats) return null;
@@ -4259,7 +4391,7 @@ const RecsV = ({ data, persona }) => {
     });
 
   return (
-    <div style={{ padding: "34px 38px", maxWidth: 800, margin: "0 auto" }}>
+    <div className="view-container" style={{ maxWidth: 800 }}>
       <div className="fu" style={{ marginBottom: 30 }}>
         <div
           className="cv"
@@ -4811,7 +4943,7 @@ ${stressCorrelation ? `Stress-Lifestyle Correlation:\n${stressCorrelation}` : ""
 ${
   persona
     ? `Life Pillars configured: ${Object.entries(persona)
-        .filter(([, v]) => v.length > 0)
+        .filter(([, v]) => Array.isArray(v) && v.length > 0)
         .map(([k, v]) => `${k}(${v.join(", ")})`)
         .join(" · ")}`
     : ""
@@ -4845,35 +4977,40 @@ Important:
     }
 
     const crisis = CRISIS_WORDS.some((k) => u.toLowerCase().includes(k));
-    if (
-      crisis ||
-      (lat?.severity === "High" &&
-        data.slice(-3).every((a) => a.severity === "High"))
-    ) {
+    const showsDistress = NEG_WORDS.some((k) => u.toLowerCase().includes(k));
+    const historyIsHigh =
+      lat?.severity === "High" &&
+      data.slice(-3).length === 3 &&
+      data.slice(-3).every((a) => a.severity === "High");
+
+    if (crisis || (historyIsHigh && showsDistress)) {
       setEsc(true);
       setShowNearby(true);
       searchNearbyCenters();
     }
     try {
-      const r = await fetch("/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const r = await fetch(
+        "https://7gh18z2ovk.execute-api.ap-south-1.amazonaws.com/prod/chat",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "gemini-3.1-flash-lite-preview",
+            messages: [
+              {
+                role: "system",
+                content: sys,
+              },
+              ...next.map((m) => ({
+                role: m.role,
+                content: m.content,
+              })),
+            ],
+          }),
         },
-        body: JSON.stringify({
-          model: "gemini-3.1-flash-lite-preview",
-          messages: [
-            {
-              role: "system",
-              content: sys,
-            },
-            ...next.map((m) => ({
-              role: m.role,
-              content: m.content,
-            })),
-          ],
-        }),
-      });
+      );
 
       const d = await r.json();
 
@@ -4923,16 +5060,7 @@ Important:
   );
 
   return (
-    <div
-      style={{
-        padding: "34px 38px",
-        maxWidth: 780,
-        margin: "0 auto",
-        height: "calc(100vh - 40px)",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
+    <div className="chat-container">
       <div className="fu" style={{ marginBottom: 18 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 13 }}>
           <div style={{ position: "relative" }}>
@@ -5515,6 +5643,7 @@ export default function Mansik({ firebaseUser }) {
         : null,
     ),
     [view, setView] = useState("dash");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // ── Firestore hooks ──
   const { assessments, addAssessment } = useAssessments();
@@ -5646,18 +5775,83 @@ export default function Mansik({ firebaseUser }) {
     <>
       <G />
       <Cursor />
-      <div style={{ display: "flex", minHeight: "100vh" }}>
-        <Sidebar
-          view={view}
-          setView={setView}
-          user={user}
-          latest={lat}
-          displayName={displayName}
-          setDisplayName={setDisplayName}
-          onLogout={() => {
-            signOut(auth).then(() => setUser(null));
-          }}
-        />
+      <div className="app-container">
+        {/* Mobile sticky header */}
+        <div className="mobile-header" style={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "12px 16px",
+          background: "linear-gradient(135deg,rgba(247,240,232,.97),rgba(239,230,216,.97))",
+          borderBottom: "1px solid rgba(200,170,150,.18)",
+          position: "sticky",
+          top: 0,
+          zIndex: 900,
+          backdropFilter: "blur(10px)",
+          width: "100%",
+        }}>
+          <button
+            onClick={() => setSidebarOpen(true)}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: 8,
+              color: "var(--brown)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{
+              width: 28,
+              height: 28,
+              borderRadius: 8,
+              background: "linear-gradient(135deg,rgba(232,200,194,.55),rgba(194,208,220,.45))",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}>
+              <Ico n="brain" s={14} c="var(--rose)" sw={1.6} />
+            </div>
+            <span style={{ fontFamily: "'Playfair Display',serif", fontSize: 16, fontWeight: 600, color: "var(--brown)" }}>
+              Mansik
+            </span>
+          </div>
+          <div style={{ width: 36 }} /> {/* spacer */}
+        </div>
+
+        <div className={`sidebar-container ${sidebarOpen ? "open" : ""}`}>
+          <Sidebar
+            view={view}
+            setView={(v) => {
+              setView(v);
+              setSidebarOpen(false);
+            }}
+            user={user}
+            latest={lat}
+            displayName={displayName}
+            setDisplayName={setDisplayName}
+            onLogout={() => {
+              signOut(auth).then(() => setUser(null));
+            }}
+            onClose={() => setSidebarOpen(false)}
+          />
+        </div>
+
+        {sidebarOpen && (
+          <div
+            className="sidebar-backdrop"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
         <main
           style={{
             flex: 1,
