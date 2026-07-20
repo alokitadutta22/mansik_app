@@ -12,6 +12,7 @@ import {
   getLocalStorageData,
   clearLocalStorageData,
 } from "./migrationUtils";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 import G from "./components/styles/GlobalStyles";
 import Cursor from "./components/Cursor";
@@ -68,17 +69,30 @@ export default function Mansik({ firebaseUser }) {
   const addChatMood = (signal) => setChatMood((prev) => [...prev, signal]);
 
   // Firestore aliases
-  const persona = firestorePersona;
+  // Use optimistic local persona state for instant mobile feedback
+  const [localPersona, setLocalPersona] = useState(null);
+  const persona = localPersona !== null ? localPersona : firestorePersona;
   const activities = firestoreActivities;
   const chatMsgs = chatMsgsFS;
   const setChatMsgs = () => {};
+
+  // Sync local persona when Firestore persona changes (e.g. from another device)
+  useEffect(() => {
+    setLocalPersona(null); // reset so firestorePersona is used
+  }, [JSON.stringify(firestorePersona)]);
 
   const setPersona = (updaterOrValue) => {
     const newVal =
       typeof updaterOrValue === "function"
         ? updaterOrValue(persona)
         : updaterOrValue;
-    updatePersona(newVal).catch(console.error);
+    // Optimistically update local state instantly
+    setLocalPersona(newVal);
+    updatePersona(newVal).catch((e) => {
+      console.error("Persona update failed:", e);
+      // Roll back optimistic update on failure
+      setLocalPersona(null);
+    });
   };
 
   // Keep user.name in sync with displayName
@@ -137,45 +151,49 @@ export default function Mansik({ firebaseUser }) {
       </>
     );
   const views = {
-    dash: <Dash user={user} data={data} persona={persona} />,
-    assess: <Assess onSubmit={addA} data={data} />,
-    analytics: <Anlyt data={data} chatMood={chatMood} />,
+    dash: <ErrorBoundary><Dash user={user} data={data} persona={persona} /></ErrorBoundary>,
+    assess: <ErrorBoundary><Assess onSubmit={addA} data={data} /></ErrorBoundary>,
+    analytics: <ErrorBoundary><Anlyt data={data} chatMood={chatMood} /></ErrorBoundary>,
     persona: (
-      <Pers
-        persona={persona}
-        setPersona={setPersona}
-        activities={activities}
-        addActivityFS={addActivityFS}
-        updateActivity={updateActivity}
-        deleteActivity={deleteActivity}
-        data={data}
-      />
+      <ErrorBoundary>
+        <Pers
+          persona={persona}
+          setPersona={setPersona}
+          activities={activities}
+          addActivityFS={addActivityFS}
+          updateActivity={updateActivity}
+          deleteActivity={deleteActivity}
+          data={data}
+        />
+      </ErrorBoundary>
     ),
     chat: (
-      <ChatV
-        data={data}
-        user={user}
-        chatMsgs={chatMsgs}
-        setChatMsgs={setChatMsgs}
-        activities={activities}
-        persona={persona}
-        addChatMood={addChatMood}
-        addChatMsg={addChatMsg}
-      />
+      <ErrorBoundary>
+        <ChatV
+          data={data}
+          user={user}
+          chatMsgs={chatMsgs}
+          setChatMsgs={setChatMsgs}
+          activities={activities}
+          persona={persona}
+          addChatMood={addChatMood}
+          addChatMsg={addChatMsg}
+        />
+      </ErrorBoundary>
     ),
+    recs: <ErrorBoundary><RecsV data={data} persona={persona} /></ErrorBoundary>,
+    soundlull: (
+      <div style={{ display: "flex", flexDirection: "column", height: "calc(100dvh - 45px)", width: "100%" }}>
+        <iframe
+          src="https://therapyapp-seven.vercel.app/"
+          style={{ flex: 1, width: "100%", border: "none" }}
+          title="Soundlull Music Therapy"
+          allow="autoplay; fullscreen"
+        />
+      </div>
+    ),
+  };
 
-recs: <RecsV data={data} persona={persona} />,
-  soundlull: (
-    <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 45px)", width: "100%" }}>
-      <iframe
-        src="https://therapyapp-seven.vercel.app/"
-        style={{ flex: 1, width: "100%", border: "none" }}
-        title="Soundlull Music Therapy"
-        allow="autoplay; fullscreen"
-      />
-    </div>
-  ),
-};
   return (
     <>
       <G />
@@ -261,8 +279,10 @@ recs: <RecsV data={data} persona={persona} />,
           style={{
             flex: 1,
             overflowY: "auto",
-            minHeight: "100vh",
+            overflowX: "hidden",
+            minHeight: "100dvh",
             position: "relative",
+            width: "100%",
           }}
         >
           <div

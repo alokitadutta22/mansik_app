@@ -12,6 +12,7 @@ const G = () => (
       background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
       background-size:200px 200px;opacity:0.55}
     html{cursor:none;scroll-behavior:smooth}
+    @media (hover:none),(pointer:coarse){html{cursor:auto}#cd,#cr{display:none!important}}
     body{background:var(--cream);font-family:'Lora',Georgia,serif;color:var(--text);overflow-x:hidden}
     #cd{position:fixed;z-index:99998;pointer-events:none;width:8px;height:8px;border-radius:50%;
       background:var(--rose);transform:translate(-50%,-50%);transition:width .2s,height .2s,background .3s}
@@ -118,6 +119,8 @@ const G = () => (
     .app-container {
       display: flex;
       min-height: 100vh;
+      width: 100%;
+      overflow-x: hidden;
     }
     .sidebar-container {
       width: 228px;
@@ -132,6 +135,8 @@ const G = () => (
     .view-container {
       padding: 34px 38px;
       margin: 0 auto;
+      width: 100%;
+      box-sizing: border-box;
     }
 
     /* Grids & Layouts */
@@ -196,6 +201,9 @@ const G = () => (
       .insights-stats-grid {
         grid-template-columns: repeat(3, 1fr);
       }
+      .view-container {
+        padding: 28px 24px;
+      }
     }
 
     @media (max-width: 768px) {
@@ -211,7 +219,7 @@ const G = () => (
         left: 0;
         height: 100vh;
         z-index: 1000;
-        width: 228px;
+        width: 260px;
         transform: translateX(-100%);
         transition: transform 0.3s ease-in-out;
       }
@@ -240,11 +248,14 @@ const G = () => (
       }
       .chat-container {
         padding: 16px 14px;
-        height: calc(100vh - 56px);
+        height: calc(100dvh - 56px);
       }
       .mobile-close-btn {
         display: flex !important;
       }
+      .bbl{max-width:88%}
+      .st{font-size:17px}
+      .pp{padding:6px 12px;font-size:12px}
     }
 
     @media (max-width: 600px) {
@@ -254,19 +265,34 @@ const G = () => (
       .severity-grid {
         grid-template-columns: 1fr;
       }
+      .view-container {
+        padding: 16px 12px;
+      }
     }
 
     @media (max-width: 480px) {
       .stats-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
       }
       .insights-stats-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
       }
       .form-row-grid {
         grid-template-columns: 1fr;
       }
       .intro-grid {
+        grid-template-columns: 1fr;
+      }
+      .severity-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+      .insights-stats-grid {
         grid-template-columns: 1fr;
       }
     }

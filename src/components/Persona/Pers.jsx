@@ -86,7 +86,7 @@ const Pers = ({
       </div>
 
       {/* Tab switcher */}
-      <div style={{ display: "flex", gap: 6, marginBottom: 22 }}>
+      <div style={{ display: "flex", gap: 6, marginBottom: 22, flexWrap: "wrap" }}>
         {[
           { id: "pillars", l: "Life Pillars", ico: "dna" },
           { id: "routines", l: "Daily Routines", ico: "clip" },
