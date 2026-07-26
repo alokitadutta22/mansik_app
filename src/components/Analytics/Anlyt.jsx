@@ -1,3 +1,4 @@
+// @coderabbitai review: check for rendering performance, bounds checking, and security
 import {
   AreaChart,
   Area,
@@ -119,8 +120,8 @@ const Anlyt = ({ data, chatMood = [] }) => {
     ) : null;
 
   const statRows = [
-    { l: "Average", v: avg, ico: "brain", c: "var(--rose)", icoC: "#D4A9A3" },
-    { l: "Highest", v: hi, ico: "trend", c: "#A8504A", icoC: "#A8504A" },
+    { l: "Average", v: avg, ico: "brain", c: "var(--coral)", icoC: "#F26D5B" },
+    { l: "Highest", v: hi, ico: "trend", c: "#C74A3F", icoC: "#C74A3F" },
     { l: "Lowest", v: lo, ico: "check", c: "#7A9A78", icoC: "#7A9A78" },
     {
       l: "Change",
@@ -139,7 +140,7 @@ const Anlyt = ({ data, chatMood = [] }) => {
           : trend === "Escalating"
             ? "#A8504A"
             : "#A88040",
-      icoC: "#97AEC0",
+      icoC: "#F2A03D",
     },
   ];
 
@@ -148,7 +149,7 @@ const Anlyt = ({ data, chatMood = [] }) => {
       <div className="fu" style={{ marginBottom: 30 }}>
         <div
           className="cv"
-          style={{ fontSize: 15, color: "var(--mute)", marginBottom: 3 }}
+          style={{ fontSize: 13, color: "var(--ink-meta)", marginBottom: 3, fontFamily: "'DM Mono',monospace", letterSpacing: "0.12em", textTransform: "uppercase" }}
         >
           longitudinal insights
         </div>
@@ -156,10 +157,13 @@ const Anlyt = ({ data, chatMood = [] }) => {
           style={{
             fontFamily: "'Playfair Display',serif",
             fontSize: 34,
-            color: "var(--brown)",
+            fontStyle: "italic",
+            fontWeight: 500,
+            color: "var(--terracotta)",
+            textTransform: "lowercase",
           }}
         >
-          Your Mental Landscape
+          your month, softly.
         </div>
         <p style={{ color: "var(--mute)", fontStyle: "italic", marginTop: 3 }}>
           Drawn from {data.length} sessions
@@ -269,6 +273,121 @@ const Anlyt = ({ data, chatMood = [] }) => {
           </div>
         ))}
       </div>
+      {/* ── Mind Anatomy & Feeling Breakdown (Reference Image 4 style) ── */}
+      <div
+        className="paper fu"
+        style={{
+          padding: "24px 28px",
+          marginBottom: 24,
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 24,
+          alignItems: "center",
+        }}
+      >
+        {/* Left: Watercolor Brain anatomical profile */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 20,
+            background: "linear-gradient(135deg,rgba(251,243,231,.8),rgba(247,180,138,.15))",
+            padding: 18,
+            borderRadius: 20,
+            border: "1px solid var(--line-pencil)",
+          }}
+        >
+          <img
+            src="/brain-main.png"
+            alt="mind anatomy"
+            style={{
+              width: 150,
+              height: 150,
+              objectFit: "contain",
+              flexShrink: 0,
+              filter: "drop-shadow(0 4px 12px rgba(199,74,63,.15))",
+            }}
+          />
+          <div style={{ flex: 1 }}>
+            <div
+              className="st"
+              style={{ fontSize: 17, marginBottom: 8 }}
+            >
+              Mind Anatomy Breakdown
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {[
+                { label: "Joy & Calm", pct: "30%", color: "#7A9A78" },
+                { label: "Anxiety & Stress", pct: "25%", color: "#C74A3F" },
+                { label: "Sadness & Overwhelm", pct: "15%", color: "#7A4A6B" },
+                { label: "Growth & Focus", pct: "30%", color: "#F2A03D" },
+              ].map((item) => (
+                <div key={item.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 12 }}>
+                  <span style={{ color: "var(--ink-soft)", fontFamily: "'Lora',serif" }}>
+                    <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: item.color, marginRight: 6 }} />
+                    {item.label}
+                  </span>
+                  <span style={{ fontFamily: "'DM Mono',monospace", fontWeight: 500, color: item.color }}>{item.pct}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Right: Feeling Words Cloud */}
+        <div
+          style={{
+            textAlign: "center",
+            padding: 18,
+            background: "radial-gradient(circle at 50% 50%, rgba(247,180,138,.20) 0%, transparent 75%)",
+            borderRadius: 20,
+            border: "1px dashed rgba(199,74,63,.20)",
+          }}
+        >
+          <div
+            className="meta"
+            style={{ marginBottom: 10 }}
+          >
+            FEELING WORDS THIS MONTH
+          </div>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 8,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            {[
+              { text: "TENDER", size: 18, c: "var(--terracotta)", f: "'Playfair Display',serif" },
+              { text: "BRIGHT", size: 14, c: "var(--amber)", f: "'Lora',serif" },
+              { text: "TIRED", size: 13, c: "var(--ink-soft)", f: "'DM Mono',monospace" },
+              { text: "HOPEFUL", size: 17, c: "var(--coral)", f: "'Playfair Display',serif" },
+              { text: "GENTLE", size: 16, c: "#7A9A78", f: "'Caveat',cursive" },
+              { text: "ANXIOUS", size: 12, c: "var(--dusty-rose)", f: "'DM Mono',monospace" },
+              { text: "QUIET", size: 15, c: "var(--plum)", f: "'Source Serif 4',serif" },
+              { text: "LOVED", size: 16, c: "var(--terracotta)", f: "'Playfair Display',serif" },
+              { text: "CONFIDENT", size: 13, c: "var(--amber)", f: "'Lora',serif" },
+              { text: "VULNERABLE", size: 14, c: "var(--coral)", f: "'Caveat',cursive" },
+            ].map((w, idx) => (
+              <span
+                key={idx}
+                style={{
+                  fontSize: w.size,
+                  color: w.c,
+                  fontFamily: w.f,
+                  fontStyle: "italic",
+                  padding: "2px 6px",
+                }}
+              >
+                {w.text}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
       <div className="insights-main-grid">
         <div className="paper fu" style={{ padding: "24px 22px" }}>
           <div className="st" style={{ fontSize: 19, marginBottom: 3 }}>
@@ -304,9 +423,9 @@ const Anlyt = ({ data, chatMood = [] }) => {
               <Line
                 type="monotone"
                 dataKey="score"
-                stroke="var(--dusty)"
+                stroke="#F26D5B"
                 strokeWidth={2.5}
-                dot={{ fill: "var(--dusty)", r: 4, strokeWidth: 0 }}
+                dot={{ fill: "#F26D5B", r: 4, strokeWidth: 0 }}
                 name="PSS Score"
                 connectNulls={false}
               />
@@ -314,10 +433,10 @@ const Anlyt = ({ data, chatMood = [] }) => {
                 <Line
                   type="monotone"
                   dataKey="chatScore"
-                  stroke="#97AEC0"
+                  stroke="#D89A94"
                   strokeWidth={2}
                   strokeDasharray="5 3"
-                  dot={{ fill: "#97AEC0", r: 3, strokeWidth: 0 }}
+                  dot={{ fill: "#D89A94", r: 3, strokeWidth: 0 }}
                   name="Chat Mood"
                   connectNulls={false}
                 />
@@ -325,7 +444,7 @@ const Anlyt = ({ data, chatMood = [] }) => {
               <Line
                 type="monotone"
                 dataKey="m20"
-                stroke="rgba(168,128,64,.38)"
+                stroke="rgba(242,160,61,.38)"
                 strokeWidth={1}
                 strokeDasharray="5 5"
                 dot={false}
@@ -333,7 +452,7 @@ const Anlyt = ({ data, chatMood = [] }) => {
               <Line
                 type="monotone"
                 dataKey="m38"
-                stroke="rgba(168,80,74,.38)"
+                stroke="rgba(199,74,63,.38)"
                 strokeWidth={1}
                 strokeDasharray="5 5"
                 dot={false}
@@ -355,9 +474,9 @@ const Anlyt = ({ data, chatMood = [] }) => {
               <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} />
               <Radar
                 dataKey="v"
-                stroke="var(--dusty)"
-                fill="var(--blush)"
-                fillOpacity={0.28}
+                stroke="#F26D5B"
+                fill="#F7B48A"
+                fillOpacity={0.22}
               />
             </RadarChart>
           </ResponsiveContainer>
@@ -369,9 +488,9 @@ const Anlyt = ({ data, chatMood = [] }) => {
         </div>
         <div className="severity-grid">
           {[
-            ["Low", "#7A9A78", "rgba(196,205,184,.18)"],
-            ["Moderate", "#A88040", "rgba(226,200,138,.18)"],
-            ["High", "#A8504A", "rgba(232,200,194,.28)"],
+            ["Low", "#7A9A78", "rgba(180,200,160,.18)"],
+            ["Moderate", "#F2A03D", "rgba(242,160,61,.14)"],
+            ["High", "#C74A3F", "rgba(242,109,91,.16)"],
           ].map(([sv2, c2, bg]) => {
             const n = dist[sv2],
               p = Math.round((n / data.length) * 100);

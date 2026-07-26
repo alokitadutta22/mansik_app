@@ -1,3 +1,4 @@
+// @coderabbitai review: check for security, bugs, and session handling
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';

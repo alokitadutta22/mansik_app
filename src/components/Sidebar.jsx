@@ -1,3 +1,4 @@
+// @coderabbitai review: check for navigation security and UI state handling
 import { useEffect, useRef, useState } from "react";
 import Ico from "./icons/Ico";
 import { NAV } from "../navigation/navItems";

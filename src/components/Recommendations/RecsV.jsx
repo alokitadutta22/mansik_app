@@ -1,3 +1,4 @@
+// @coderabbitai review: check for security, bugs, and data handling
 import Ico from "../icons/Ico";
 
 const RecsV = ({ data, persona }) => {

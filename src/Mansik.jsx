@@ -12,7 +12,6 @@ import {
   getLocalStorageData,
   clearLocalStorageData,
 } from "./migrationUtils";
-import ErrorBoundary from "./components/ErrorBoundary";
 
 import G from "./components/styles/GlobalStyles";
 import Cursor from "./components/Cursor";
@@ -69,30 +68,17 @@ export default function Mansik({ firebaseUser }) {
   const addChatMood = (signal) => setChatMood((prev) => [...prev, signal]);
 
   // Firestore aliases
-  // Use optimistic local persona state for instant mobile feedback
-  const [localPersona, setLocalPersona] = useState(null);
-  const persona = localPersona !== null ? localPersona : firestorePersona;
+  const persona = firestorePersona;
   const activities = firestoreActivities;
   const chatMsgs = chatMsgsFS;
   const setChatMsgs = () => {};
-
-  // Sync local persona when Firestore persona changes (e.g. from another device)
-  useEffect(() => {
-    setLocalPersona(null); // reset so firestorePersona is used
-  }, [JSON.stringify(firestorePersona)]);
 
   const setPersona = (updaterOrValue) => {
     const newVal =
       typeof updaterOrValue === "function"
         ? updaterOrValue(persona)
         : updaterOrValue;
-    // Optimistically update local state instantly
-    setLocalPersona(newVal);
-    updatePersona(newVal).catch((e) => {
-      console.error("Persona update failed:", e);
-      // Roll back optimistic update on failure
-      setLocalPersona(null);
-    });
+    updatePersona(newVal).catch(console.error);
   };
 
   // Keep user.name in sync with displayName
@@ -151,49 +137,47 @@ export default function Mansik({ firebaseUser }) {
       </>
     );
   const views = {
-    dash: <ErrorBoundary><Dash user={user} data={data} persona={persona} /></ErrorBoundary>,
-    assess: <ErrorBoundary><Assess onSubmit={addA} data={data} /></ErrorBoundary>,
-    analytics: <ErrorBoundary><Anlyt data={data} chatMood={chatMood} /></ErrorBoundary>,
+    dash: <Dash user={user} data={data} persona={persona} />,
+    assess: <Assess onSubmit={addA} data={data} />,
+    analytics: <Anlyt data={data} chatMood={chatMood} />,
     persona: (
-      <ErrorBoundary>
-        <Pers
-          persona={persona}
-          setPersona={setPersona}
-          activities={activities}
-          addActivityFS={addActivityFS}
-          updateActivity={updateActivity}
-          deleteActivity={deleteActivity}
-          data={data}
-        />
-      </ErrorBoundary>
+      <Pers
+        persona={persona}
+        setPersona={setPersona}
+        user={user}
+        activities={activities}
+        addActivityFS={addActivityFS}
+        updateActivity={updateActivity}
+        deleteActivity={deleteActivity}
+        data={data}
+      />
     ),
     chat: (
-      <ErrorBoundary>
-        <ChatV
-          data={data}
-          user={user}
-          chatMsgs={chatMsgs}
-          setChatMsgs={setChatMsgs}
-          activities={activities}
-          persona={persona}
-          addChatMood={addChatMood}
-          addChatMsg={addChatMsg}
-        />
-      </ErrorBoundary>
+      <ChatV
+        data={data}
+        user={user}
+        chatMsgs={chatMsgs}
+        setChatMsgs={setChatMsgs}
+        activities={activities}
+        persona={persona}
+        setPersona={setPersona}
+        addChatMood={addChatMood}
+        addChatMsg={addChatMsg}
+      />
     ),
-    recs: <ErrorBoundary><RecsV data={data} persona={persona} /></ErrorBoundary>,
-    soundlull: (
-      <div style={{ display: "flex", flexDirection: "column", height: "calc(100dvh - 45px)", width: "100%" }}>
-        <iframe
-          src="https://therapyapp-seven.vercel.app/"
-          style={{ flex: 1, width: "100%", border: "none" }}
-          title="Soundlull Music Therapy"
-          allow="autoplay; fullscreen"
-        />
-      </div>
-    ),
-  };
 
+recs: <RecsV data={data} persona={persona} />,
+  soundlull: (
+    <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 45px)", width: "100%" }}>
+      <iframe
+        src="https://therapyapp-seven.vercel.app/"
+        style={{ flex: 1, width: "100%", border: "none" }}
+        title="Soundlull Music Therapy"
+        allow="autoplay; fullscreen"
+      />
+    </div>
+  ),
+};
   return (
     <>
       <G />
@@ -204,8 +188,8 @@ export default function Mansik({ firebaseUser }) {
           alignItems: "center",
           justifyContent: "space-between",
           padding: "12px 16px",
-          background: "linear-gradient(135deg,rgba(247,240,232,.97),rgba(239,230,216,.97))",
-          borderBottom: "1px solid rgba(200,170,150,.18)",
+          background: "linear-gradient(135deg,rgba(251,243,231,.97),rgba(245,237,224,.97))",
+          borderBottom: "1px solid rgba(122,74,60,.15)",
           position: "sticky",
           top: 0,
           zIndex: 900,
@@ -219,7 +203,7 @@ export default function Mansik({ firebaseUser }) {
               border: "none",
               cursor: "pointer",
               padding: 8,
-              color: "var(--brown)",
+              color: "#C74A3F",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -279,55 +263,59 @@ export default function Mansik({ firebaseUser }) {
           style={{
             flex: 1,
             overflowY: "auto",
-            overflowX: "hidden",
-            minHeight: "100dvh",
+            minHeight: "100vh",
             position: "relative",
-            width: "100%",
           }}
         >
           <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            pointerEvents: "none",
+            zIndex: 0,
+            overflow: "hidden",
+          }}
+        >
+          {/* Top-right peach bloom */}
+          <div
+            className="blob dft"
             style={{
-              position: "fixed",
-              inset: 0,
-              pointerEvents: "none",
-              zIndex: 0,
-              overflow: "hidden",
+              width: 460,
+              height: 460,
+              background: "radial-gradient(circle, rgba(247,180,138,.55) 0%, rgba(242,109,91,.25) 60%, transparent 80%)",
+              top: -130,
+              right: 60,
+              opacity: 0.55,
+              filter: "blur(80px)",
             }}
-          >
-            <div
-              className="blob dft"
-              style={{
-                width: 420,
-                height: 420,
-                background: "var(--blush)",
-                top: -110,
-                right: 90,
-                opacity: 0.15,
-              }}
-            />
-            <div
-              className="blob flt"
-              style={{
-                width: 340,
-                height: 340,
-                background: "var(--sky)",
-                bottom: 40,
-                right: -70,
-                opacity: 0.12,
-              }}
-            />
-            <div
-              className="blob"
-              style={{
-                width: 280,
-                height: 280,
-                background: "var(--honey)",
-                top: "42%",
-                left: "32%",
-                opacity: 0.07,
-              }}
-            />
-          </div>
+          />
+          {/* Bottom-right plum bloom */}
+          <div
+            className="blob flt"
+            style={{
+              width: 380,
+              height: 380,
+              background: "radial-gradient(circle, rgba(122,74,107,.42) 0%, rgba(232,90,124,.22) 60%, transparent 80%)",
+              bottom: 20,
+              right: -80,
+              opacity: 0.40,
+              filter: "blur(72px)",
+            }}
+          />
+          {/* Center-left amber bloom */}
+          <div
+            className="blob"
+            style={{
+              width: 300,
+              height: 300,
+              background: "radial-gradient(circle, rgba(242,160,61,.38) 0%, rgba(247,180,138,.20) 60%, transparent 80%)",
+              top: "44%",
+              left: "30%",
+              opacity: 0.30,
+              filter: "blur(68px)",
+            }}
+          />
+        </div>
           <div style={{ position: "relative", zIndex: 1 }}>
             {views[view] || views.dash}
           </div>

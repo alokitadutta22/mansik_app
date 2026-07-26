@@ -1,3 +1,4 @@
+// @coderabbitai review: check for security, data sync bugs, and sanitization
 import { useState, useEffect } from "react";
 import { auth, db } from "./firebase";
 import {

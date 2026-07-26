@@ -1,3 +1,4 @@
+// @coderabbitai review: check for security, bugs, and input validation
 import { useState } from "react";
 import Ico from "./icons/Ico";
 

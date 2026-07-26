@@ -1,3 +1,4 @@
+// @coderabbitai review: check for security, bugs, and input validation
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -201,11 +202,11 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f9f9f7] font-['Lora',serif]">
+    <div className="min-h-screen flex items-center justify-center font-['Lora',serif]" style={{ background: '#FBF3E7' }}>
       <div id="recaptcha-container"></div>
       
-      <div className="max-w-md w-full p-8 border border-[#e2e3e1] bg-white rounded-2xl shadow-xl">
-        <h2 className="text-3xl font-['Playfair_Display'] text-[#041b0b] font-semibold mb-2 text-center">
+      <div className="max-w-md w-full p-9 rounded-2xl" style={{ background: '#F5EDE0', border: '1px solid #EEE2CE', boxShadow: '0 12px 40px rgba(122,74,60,0.12)' }}>
+        <h2 className="text-3xl mb-2 text-center" style={{ fontFamily: 'Playfair Display, serif', fontStyle: 'italic', fontWeight: 500, color: '#C74A3F', textTransform: 'lowercase' }}>
           {mode === "login" && "Enter Sanctuary"}
           {mode === "register" && "Begin Your Journey"}
           {mode === "mfa-setup" && "Secure Your Account"}
@@ -213,7 +214,7 @@ const AuthPage = () => {
           {mode === "forgot-password" && "Reset Password"}
         </h2>
         
-        <p className="text-sm text-[#737972] italic mb-6 text-center">
+        <p className="text-sm italic mb-6 text-center" style={{ color: '#B0857A', fontFamily: 'Source Serif 4, Georgia, serif' }}>
           {mode === "login" && "Welcome back to your quiet space."}
           {mode === "register" && "Create your sanctuary credentials."}
           {mode === "mfa-setup" && "Add a phone number for 2-Factor Authentication."}
@@ -222,7 +223,7 @@ const AuthPage = () => {
         </p>
 
         {error && (
-          <div className="bg-[#ffdad6] text-[#93000a] p-3 text-sm rounded-lg mb-4 text-center">
+          <div className="p-3 text-sm rounded-xl mb-4 text-center" style={{ background: 'rgba(242,109,91,.14)', color: '#8B2A1A', border: '1px solid rgba(199,74,63,.22)' }}>
             {error}
           </div>
         )}
@@ -230,25 +231,25 @@ const AuthPage = () => {
         {(mode === "login" || mode === "register") && (
           <form onSubmit={handleAuth} className="space-y-4 font-['Inter']">
             <div>
-              <label className="block text-xs text-[#737972] mb-1 uppercase tracking-wider">Email Address</label>
+              <label className="block text-xs mb-2 uppercase tracking-wider" style={{ color: '#B0857A', fontFamily: 'DM Mono, monospace', letterSpacing: '0.14em' }}>Email Address</label>
               <input 
                 type="email" 
                 value={email} 
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="your.email@example.com"
                 autoComplete="off"
-                className="w-full px-4 py-3 rounded-xl border border-[#c3c8c0] focus:ring-2 focus:ring-[#b2ceb3] outline-none transition bg-[#f9f9f7]"
+                className="w-full px-0 py-3 outline-none transition" style={{ borderBottom: '1.5px solid rgba(199,74,63,.28)', background: 'transparent', color: '#4A3428', fontFamily: 'Lora, serif' }}
                 required 
               />
             </div>
             <div>
               <div className="flex justify-between items-center mb-1">
-                <label className="block text-xs text-[#737972] uppercase tracking-wider">Password</label>
+                <label className="block text-xs uppercase tracking-wider" style={{ color: '#B0857A', fontFamily: 'DM Mono, monospace', letterSpacing: '0.14em' }}>Password</label>
                 {mode === "login" && (
                   <button 
                     type="button" 
                     onClick={() => { setMode("forgot-password"); setError(""); setResetSent(false); }}
-                    className="text-xs text-[#516600] hover:underline"
+                    className="text-xs hover:underline" style={{ color: '#C74A3F' }}
                   >
                     Forgot Password?
                   </button>
@@ -260,28 +261,28 @@ const AuthPage = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 autoComplete="new-password"
-                className="w-full px-4 py-3 rounded-xl border border-[#c3c8c0] focus:ring-2 focus:ring-[#b2ceb3] outline-none transition bg-[#f9f9f7]"
+                className="w-full px-0 py-3 outline-none transition" style={{ borderBottom: '1.5px solid rgba(199,74,63,.28)', background: 'transparent', color: '#4A3428', fontFamily: 'Lora, serif' }}
                 required 
               />
             </div>
             <button 
               type="submit" 
               disabled={loading}
-              className="w-full bg-[#041b0b] text-white py-3.5 rounded-full font-medium hover:bg-[#344c38] transition shadow-md disabled:opacity-50 mt-4 font-['Lora']"
+              className="w-full py-3.5 rounded-full font-medium transition disabled:opacity-50 mt-5 font-['Lora'] text-[#FBF3E7]" style={{ background: 'linear-gradient(135deg,#F26D5B,#C74A3F)', boxShadow: '0 6px 20px rgba(199,74,63,.28)' }}
             >
               {loading ? "Please wait..." : (mode === "login" ? "Enter" : "Continue")}
             </button>
             
             <div className="relative mt-6 flex items-center justify-center">
-              <span className="absolute bg-white px-3 text-xs text-[#737972] z-10 font-['Inter']">OR</span>
-              <div className="w-full border-t border-[#e2e3e1]"></div>
+              <span className="absolute px-3 text-xs z-10" style={{ background: '#F5EDE0', color: '#B0857A', fontFamily: 'DM Mono, monospace', letterSpacing: '0.12em' }}>OR</span>
+              <div className="w-full border-t" style={{ borderColor: 'rgba(199,74,63,.15)' }}></div>
             </div>
             
             <button
               type="button"
               onClick={handleGoogleSignIn}
               disabled={loading}
-              className="w-full bg-white border border-[#e2e3e1] text-[#041b0b] py-3.5 rounded-full font-medium hover:bg-[#f9f9f7] transition shadow-sm disabled:opacity-50 mt-4 flex items-center justify-center gap-2 font-['Inter']"
+              className="w-full py-3.5 rounded-full font-medium transition shadow-sm disabled:opacity-50 mt-4 flex items-center justify-center gap-2 font-['Lora']" style={{ background: '#FBF3E7', border: '1px solid rgba(199,74,63,.22)', color: '#4A3428' }}
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -297,19 +298,19 @@ const AuthPage = () => {
         {mode === "forgot-password" && (
           <form onSubmit={handleForgotPassword} className="space-y-4 font-['Inter']">
             {resetSent ? (
-              <div className="bg-[#e6f4ea] text-[#137333] p-4 rounded-xl text-sm text-center border border-[#bce2cc]">
+              <div className="p-4 rounded-xl text-sm text-center" style={{ background: 'rgba(199,74,63,.08)', color: '#8B2A1A', border: '1px solid rgba(199,74,63,.22)' }}>
                 A password reset link has been sent to your email. Please check your inbox.
               </div>
             ) : (
               <div>
-                <label className="block text-xs text-[#737972] mb-1 uppercase tracking-wider">Email Address</label>
+                <label className="block text-xs mb-2 uppercase tracking-wider" style={{ color: '#B0857A', fontFamily: 'DM Mono, monospace', letterSpacing: '0.14em' }}>Email Address</label>
                 <input 
                   type="email" 
                   value={email} 
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="your.email@example.com"
                   autoComplete="off"
-                  className="w-full px-4 py-3 rounded-xl border border-[#c3c8c0] focus:ring-2 focus:ring-[#b2ceb3] outline-none transition bg-[#f9f9f7]"
+                  className="w-full px-0 py-3 outline-none transition" style={{ borderBottom: '1.5px solid rgba(199,74,63,.28)', background: 'transparent', color: '#4A3428', fontFamily: 'Lora, serif' }}
                   required 
                 />
               </div>
@@ -318,7 +319,7 @@ const AuthPage = () => {
             <button 
               type="submit" 
               disabled={loading}
-              className="w-full bg-[#041b0b] text-white py-3.5 rounded-full font-medium hover:bg-[#344c38] transition shadow-md disabled:opacity-50 mt-4 font-['Lora']"
+              className="w-full py-3.5 rounded-full font-medium transition disabled:opacity-50 mt-5 font-['Lora'] text-[#FBF3E7]" style={{ background: 'linear-gradient(135deg,#F26D5B,#C74A3F)', boxShadow: '0 6px 20px rgba(199,74,63,.28)' }}
             >
               {loading ? "Please wait..." : (resetSent ? "Resend Reset Link" : "Send Reset Link")}
             </button>
@@ -327,7 +328,7 @@ const AuthPage = () => {
               <button 
                 type="button"
                 onClick={() => { setMode("login"); setError(""); setResetSent(false); }}
-                className="text-sm text-[#516600] font-medium hover:underline"
+                className="text-sm font-medium hover:underline" style={{ color: '#C74A3F' }}
               >
                 Back to Sign In
               </button>
@@ -338,20 +339,20 @@ const AuthPage = () => {
         {mode === "mfa-setup" && (
           <form onSubmit={setupMFA} className="space-y-4 font-['Inter']">
             <div>
-              <label className="block text-xs text-[#737972] mb-1 uppercase tracking-wider">Phone Number (with country code)</label>
+              <label className="block text-xs mb-2 uppercase tracking-wider" style={{ color: '#B0857A', fontFamily: 'DM Mono, monospace', letterSpacing: '0.14em' }}>Phone Number (with country code)</label>
               <input 
                 type="tel" 
                 placeholder="+12345678900"
                 value={phone} 
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-[#c3c8c0] focus:ring-2 focus:ring-[#b2ceb3] outline-none transition bg-[#f9f9f7]"
+                className="w-full px-0 py-3 outline-none transition" style={{ borderBottom: '1.5px solid rgba(199,74,63,.28)', background: 'transparent', color: '#4A3428', fontFamily: 'Lora, serif' }}
                 required 
               />
             </div>
             <button 
               type="submit" 
               disabled={loading}
-              className="w-full bg-[#041b0b] text-white py-3.5 rounded-full font-medium hover:bg-[#344c38] transition shadow-md disabled:opacity-50 mt-4 font-['Lora']"
+              className="w-full py-3.5 rounded-full font-medium transition disabled:opacity-50 mt-5 font-['Lora'] text-[#FBF3E7]" style={{ background: 'linear-gradient(135deg,#F26D5B,#C74A3F)', boxShadow: '0 6px 20px rgba(199,74,63,.28)' }}
             >
               {loading ? "Sending SMS..." : "Send Code"}
             </button>
@@ -361,12 +362,12 @@ const AuthPage = () => {
         {mode === "mfa-verify" && (
           <form onSubmit={verifyMFA} className="space-y-4 font-['Inter']">
             <div>
-              <label className="block text-xs text-[#737972] mb-1 uppercase tracking-wider">SMS Authentication Code</label>
+              <label className="block text-xs mb-2 uppercase tracking-wider" style={{ color: '#B0857A', fontFamily: 'DM Mono, monospace', letterSpacing: '0.14em' }}>SMS Authentication Code</label>
               <input 
                 type="text" 
                 value={code} 
                 onChange={(e) => setCode(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-[#c3c8c0] focus:ring-2 focus:ring-[#b2ceb3] outline-none transition bg-[#f9f9f7] text-center text-lg tracking-widest"
+                className="w-full px-0 py-3 outline-none transition text-center text-lg tracking-widest" style={{ borderBottom: '1.5px solid rgba(199,74,63,.28)', background: 'transparent', color: '#4A3428', fontFamily: 'DM Mono, monospace' }}
                 maxLength={6}
                 required 
               />
@@ -374,7 +375,7 @@ const AuthPage = () => {
             <button 
               type="submit" 
               disabled={loading}
-              className="w-full bg-[#041b0b] text-white py-3.5 rounded-full font-medium hover:bg-[#344c38] transition shadow-md disabled:opacity-50 mt-4 font-['Lora']"
+              className="w-full py-3.5 rounded-full font-medium transition disabled:opacity-50 mt-5 font-['Lora'] text-[#FBF3E7]" style={{ background: 'linear-gradient(135deg,#F26D5B,#C74A3F)', boxShadow: '0 6px 20px rgba(199,74,63,.28)' }}
             >
               {loading ? "Verifying..." : "Verify & Enter"}
             </button>
@@ -383,7 +384,7 @@ const AuthPage = () => {
                 type="button"
                 onClick={resendMfaCode}
                 disabled={loading}
-                className="text-sm text-[#516600] font-medium hover:underline disabled:opacity-50 disabled:no-underline"
+                className="text-sm font-medium hover:underline disabled:opacity-50 disabled:no-underline" style={{ color: '#C74A3F' }}
               >
                 Didn't receive the code? Resend Code
               </button>
@@ -394,12 +395,12 @@ const AuthPage = () => {
         {/* Toggle Login/Register */}
         {(mode === "login" || mode === "register") && (
           <div className="mt-6 text-center text-sm font-['Inter']">
-            <span className="text-[#737972]">
+            <span style={{ color: '#B0857A' }}>
               {mode === "login" ? "New to Mansik?" : "Already have an account?"}
             </span>{" "}
             <button 
               onClick={() => setMode(mode === "login" ? "register" : "login")}
-              className="text-[#516600] font-medium hover:underline"
+              className="font-medium hover:underline" style={{ color: '#C74A3F' }}
             >
               {mode === "login" ? "Create an account" : "Sign In instead"}
             </button>

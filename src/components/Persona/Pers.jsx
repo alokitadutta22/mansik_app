@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Ico from "../icons/Ico";
 import { PIL } from "../Assessment/pssData";
 import { DAYS, DAY_SHORT, todayName, todayStr, calcPillarStats } from "./pillarHelpers";
 
 const Pers = ({
-  persona,
+  persona = {},
   setPersona,
+  user,
   activities,
   addActivityFS,
   updateActivity,
@@ -22,7 +23,67 @@ const Pers = ({
     startTime: "07:00",
     endTime: "08:00",
   });
-  const [persTab, setPersTab] = useState("pillars"); // pillars | routines | analytics
+  const [persTab, setPersTab] = useState("pillars"); // pillars | routines | analytics | guardian
+
+  // Guardian contact form state
+  const [guardianForm, setGuardianForm] = useState({
+    name: persona.guardian?.name || "",
+    phone: persona.guardian?.phone || "",
+    email: persona.guardian?.email || "",
+    relationship: persona.guardian?.relationship || "Parent",
+  });
+  const [guardianSaved, setGuardianSaved] = useState(false);
+  const [guardianErr, setGuardianErr] = useState("");
+
+  useEffect(() => {
+    if (persona.guardian) {
+      setGuardianForm({
+        name: persona.guardian.name || "",
+        phone: persona.guardian.phone || "",
+        email: persona.guardian.email || "",
+        relationship: persona.guardian.relationship || "Parent",
+      });
+    }
+  }, [persona.guardian]);
+
+  const handleSaveGuardian = (e) => {
+    e.preventDefault();
+    setGuardianErr("");
+    setGuardianSaved(false);
+
+    const userEmail = user?.email?.toLowerCase()?.trim();
+    const gEmail = guardianForm.email.toLowerCase().trim();
+
+    if (userEmail && gEmail && userEmail === gEmail) {
+      setGuardianErr("Guardian email cannot be the same as your account email. Please enter a trusted friend, family member, or guardian.");
+      return;
+    }
+
+    if (!guardianForm.name.trim()) {
+      setGuardianErr("Please enter the guardian's name.");
+      return;
+    }
+
+    if (!guardianForm.email.trim() && !guardianForm.phone.trim()) {
+      setGuardianErr("Please provide at least a guardian email address or mobile phone number.");
+      return;
+    }
+
+    setPersona((p) => ({
+      ...p,
+      guardian: {
+        name: guardianForm.name.trim(),
+        phone: guardianForm.phone.trim(),
+        email: guardianForm.email.trim(),
+        relationship: guardianForm.relationship,
+        updatedAt: new Date().toISOString(),
+      },
+    }));
+
+    setGuardianSaved(true);
+    setTimeout(() => setGuardianSaved(false), 4000);
+  };
+
   const tog = (cat, ag) =>
     setPersona((p) => {
       const cur = p[cat] || [],
@@ -91,6 +152,7 @@ const Pers = ({
           { id: "pillars", l: "Life Pillars", ico: "dna" },
           { id: "routines", l: "Daily Routines", ico: "clip" },
           { id: "analytics", l: "Consistency", ico: "chart" },
+          { id: "guardian", l: "Guardian Contact", ico: "shield" },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -1333,6 +1395,245 @@ const Pers = ({
             </div>
           )}
         </>
+      )}
+
+      {/* ════ GUARDIAN & SAFETY TAB ════ */}
+      {persTab === "guardian" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          {/* E2E Privacy Banner */}
+          <div
+            className="paper-b fu"
+            style={{
+              padding: "20px 24px",
+              borderRadius: 16,
+              background: "linear-gradient(135deg, rgba(251,243,231,.95), rgba(244,233,222,.85))",
+              border: "1px solid rgba(200,170,150,.35)",
+              boxShadow: "0 4px 18px rgba(122,74,60,.06)",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+              <div
+                style={{
+                  width: 42,
+                  height: 42,
+                  borderRadius: "50%",
+                  background: "linear-gradient(135deg, rgba(232,200,194,.8), rgba(204,196,216,.7))",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                <Ico n="shield" s={22} c="var(--rose)" sw={1.8} />
+              </div>
+              <div>
+                <div
+                  style={{
+                    fontFamily: "'Playfair Display',serif",
+                    fontSize: 18,
+                    fontWeight: 600,
+                    color: "var(--brown)",
+                    marginBottom: 4,
+                  }}
+                >
+                  End-to-End Encrypted Guardian Protection
+                </div>
+                <p style={{ fontSize: 13, color: "var(--mute)", lineHeight: 1.55, margin: 0 }}>
+                  Your safety comes first. Designate a trusted guardian or close contact. If elevated distress is detected during a chat session (<strong>more than 10 crisis triggers</strong>), our system will silently dispatch an automated check-in SMS & Email to your guardian.
+                </p>
+                <div
+                  style={{
+                    marginTop: 10,
+                    fontSize: 12,
+                    color: "#5A7A58",
+                    fontWeight: 500,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    background: "rgba(90,122,88,.08)",
+                    padding: "6px 12px",
+                    borderRadius: 8,
+                    width: "fit-content",
+                  }}
+                >
+                  <Ico n="check" s={14} c="#5A7A58" sw={2} />
+                  <span>Your chat messages are 100% private & never shared with your guardian.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Form Card */}
+          <div
+            className="paper-b fu"
+            style={{
+              padding: "24px",
+              borderRadius: 16,
+              background: "rgba(255,255,255,.65)",
+              border: "1px solid rgba(200,170,150,.25)",
+            }}
+          >
+            <form onSubmit={handleSaveGuardian} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+              {guardianErr && (
+                <div
+                  style={{
+                    padding: "10px 14px",
+                    borderRadius: 10,
+                    background: "rgba(199,74,63,.1)",
+                    border: "1px solid rgba(199,74,63,.3)",
+                    color: "#C74A3F",
+                    fontSize: 13,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  <Ico n="alert" s={16} c="#C74A3F" sw={1.8} />
+                  <span>{guardianErr}</span>
+                </div>
+              )}
+
+              {guardianSaved && (
+                <div
+                  style={{
+                    padding: "10px 14px",
+                    borderRadius: 10,
+                    background: "rgba(90,122,88,.1)",
+                    border: "1px solid rgba(90,122,88,.3)",
+                    color: "#5A7A58",
+                    fontSize: 13,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  <Ico n="check" s={16} c="#5A7A58" sw={2} />
+                  <span>Guardian details saved securely.</span>
+                </div>
+              )}
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
+                {/* Name */}
+                <div>
+                  <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "var(--brown)", marginBottom: 6 }}>
+                    Guardian Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Priya Sharma"
+                    value={guardianForm.name}
+                    onChange={(e) => setGuardianForm({ ...guardianForm, name: e.target.value })}
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      borderRadius: 10,
+                      border: "1px solid rgba(200,170,150,.35)",
+                      background: "rgba(255,255,255,.9)",
+                      fontSize: 14,
+                      color: "var(--brown)",
+                      outline: "none",
+                    }}
+                  />
+                </div>
+
+                {/* Relationship */}
+                <div>
+                  <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "var(--brown)", marginBottom: 6 }}>
+                    Relationship
+                  </label>
+                  <select
+                    value={guardianForm.relationship}
+                    onChange={(e) => setGuardianForm({ ...guardianForm, relationship: e.target.value })}
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      borderRadius: 10,
+                      border: "1px solid rgba(200,170,150,.35)",
+                      background: "rgba(255,255,255,.9)",
+                      fontSize: 14,
+                      color: "var(--brown)",
+                      outline: "none",
+                    }}
+                  >
+                    <option value="Parent">Parent</option>
+                    <option value="Sibling">Sibling</option>
+                    <option value="Spouse/Partner">Spouse / Partner</option>
+                    <option value="Close Friend">Close Friend</option>
+                    <option value="Therapist/Counselor">Therapist / Counselor</option>
+                    <option value="Relative">Relative</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                {/* Phone */}
+                <div>
+                  <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "var(--brown)", marginBottom: 6 }}>
+                    Mobile Phone Number (for SMS)
+                  </label>
+                  <input
+                    type="tel"
+                    placeholder="+91 98765 43210"
+                    value={guardianForm.phone}
+                    onChange={(e) => setGuardianForm({ ...guardianForm, phone: e.target.value })}
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      borderRadius: 10,
+                      border: "1px solid rgba(200,170,150,.35)",
+                      background: "rgba(255,255,255,.9)",
+                      fontSize: 14,
+                      color: "var(--brown)",
+                      outline: "none",
+                    }}
+                  />
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "var(--brown)", marginBottom: 6 }}>
+                    Guardian Email Address
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="guardian@example.com"
+                    value={guardianForm.email}
+                    onChange={(e) => setGuardianForm({ ...guardianForm, email: e.target.value })}
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      borderRadius: 10,
+                      border: "1px solid rgba(200,170,150,.35)",
+                      background: "rgba(255,255,255,.9)",
+                      fontSize: 14,
+                      color: "var(--brown)",
+                      outline: "none",
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
+                <button
+                  type="submit"
+                  style={{
+                    padding: "11px 24px",
+                    borderRadius: 30,
+                    background: "linear-gradient(135deg, rgba(242,109,91,.9), rgba(232,90,124,.9))",
+                    color: "#FFF",
+                    border: "none",
+                    fontWeight: 600,
+                    fontSize: 14,
+                    cursor: "pointer",
+                    boxShadow: "0 4px 14px rgba(242,109,91,.3)",
+                    transition: "all .2s",
+                  }}
+                >
+                  Save Guardian Details
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -1,13 +1,23 @@
+// @coderabbitai review: check for security and regex edge cases
 /* Sentiment keyword lists for chat mood signals */
 export const CRISIS_WORDS = [
   "suicide",
+  "suicidal",
   "end my life",
   "kill myself",
   "can't go on",
+  "cant go on",
   "want to die",
+  "wnat to die",
+  "don't want to live",
+  "dont want to live",
   "self harm",
   "hurt myself",
   "no reason to live",
+  "cant deal with this",
+  "can't deal with this",
+  "don't like this life",
+  "dont like this life",
 ];
 export const NEG_WORDS = [
   "anxious",

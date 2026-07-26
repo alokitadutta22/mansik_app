@@ -1,3 +1,4 @@
+// @coderabbitai review: check for public page security, open redirects, and DOM bugs
 import React, { useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './LandingPage.css';
@@ -132,7 +133,7 @@ const LandingPage = () => {
     <div className="landing-page">
       {/* Navigation */}
       <nav className="landing-nav">
-        <div className="landing-logo">Sthir-Mann</div>
+        <div className="landing-logo">mansik.</div>
         <button className="nav-cta" onClick={goToAuth}>Begin Your Journey</button>
       </nav>
 
@@ -151,19 +152,23 @@ const LandingPage = () => {
         </div>
         <div className="chapter-content">
           <p className="chapter-number">Chapter One</p>
-          <h1 className="chapter-title">The weight we carry is often invisible.</h1>
-          <p className="chapter-text">
-            Every day, we navigate a complex world of responsibilities, relationships, and expectations.
-            The pressure builds slowly—so slowly that we often don't notice until we're struggling to breathe
-            under the weight of it all.
+          <h1 className="chapter-title">soften into yourself.</h1>
+          <p className="chapter-text" style={{ fontStyle: 'italic', fontSize: '1.15rem' }}>
+            a gentle practice for the tender mind.
           </p>
           <p className="chapter-text">
-            You're not alone in feeling this way. Millions experience the same quiet struggle,
-            carrying burdens that others can't see.
+            Here, we cultivate a space for gentle observation and self-compassion.
+            Through guided reflections and mindful pauses, we invite you to release
+            the tension of the day and return to your inherent softness.
+          </p>
+          <p className="chapter-text">
+            You're not alone in feeling this way. Every breath is a beginning.
+            This is your sanctuary for the tender mind.
           </p>
           <div className="quote">
             "Sometimes the bravest thing you can do is ask for help."
           </div>
+          <div className="handwritten-accent" aria-label="breathe">breathe</div>
         </div>
       </section>
 
@@ -221,9 +226,9 @@ const LandingPage = () => {
       <section className="chapter chapter-3">
         <div className="chapter-content">
           <p className="chapter-number">Chapter Three</p>
-          <h2 className="chapter-title">Every journey begins with a single step.</h2>
+          <h2 className="chapter-title">every journey begins with a single step.</h2>
           <p className="chapter-text">
-            Sthir-Mann walks beside you, gently guiding you toward balance. Not with judgment,
+            Mansik walks beside you, gently guiding you toward balance. Not with judgment,
             but with understanding. Not with quick fixes, but with sustainable change.
           </p>
 
@@ -334,7 +339,7 @@ const LandingPage = () => {
       <section className="chapter chapter-5">
         <div className="chapter-content">
           <p className="chapter-number">Chapter Five</p>
-          <h2 className="chapter-title">Your story doesn't end here. It begins.</h2>
+          <h2 className="chapter-title">your story doesn't end here. it begins.</h2>
           <p className="chapter-text">
             This is your invitation to write a new chapter—one where you prioritize your wellbeing,
             honor your needs, and find balance in the beautiful chaos of life.
@@ -347,10 +352,10 @@ const LandingPage = () => {
 
           <div className="testimonial">
             <p className="testimonial-text">
-              "MANSik helped me see that my struggles weren't weaknesses—they were signs
+              "Mansik helped me see that my struggles weren't weaknesses — they were signs
               that I needed to care for myself. For the first time in years, I feel balanced."
             </p>
-            <p className="testimonial-author">— A fellow traveler on this journey</p>
+            <p className="testimonial-author" style={{ fontFamily: 'DM Mono, monospace', fontSize: '0.7rem', letterSpacing: '0.14em', textTransform: 'uppercase' }}>— a fellow traveler on this journey</p>
           </div>
         </div>
       </section>
@@ -367,7 +372,7 @@ const LandingPage = () => {
             <a href="#">Support</a>
             <a href="#">Contact</a>
           </div>
-          <p>&copy; 2024 Sthir-Mann. Your wellness journey starts here.</p>
+          <p className="footer-copyright">&copy; 2026 Mansik. your wellness journey starts here.</p>
         </div>
       </footer>
     </div>

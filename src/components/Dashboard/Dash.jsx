@@ -1,3 +1,4 @@
+// @coderabbitai review: check for dashboard security and data sanitization
 import Ico from "../icons/Ico";
 import { PIL, sc, fd } from "../Assessment/pssData";
 import {
@@ -28,8 +29,8 @@ const Dash = ({ user, data, persona }) => {
     trend === "Improving"
       ? "#7A9A78"
       : trend === "Increasing"
-        ? "#A8504A"
-        : "#A88040";
+        ? "#C74A3F"
+        : "#F2A03D";
   const chartD = data
     .slice(-8)
     .map((a) => ({ date: fd(a.date), score: a.score, sev: a.severity }));
@@ -51,17 +52,17 @@ const Dash = ({ user, data, persona }) => {
       l: "Latest Score",
       v: lat?.score ?? "—",
       sub: lat?.severity ?? "No data",
-      c: lat ? sc(lat.severity) : "var(--mute)",
+      c: lat ? sc(lat.severity) : "var(--ink-meta)",
       ico: "brain",
-      icoC: "#D4A9A3",
+      icoC: "#F26D5B",
     },
     {
       l: "Average Score",
       v: avg || "—",
       sub: "All time",
-      c: "var(--sage-d)",
+      c: "var(--amber)",
       ico: "chart",
-      icoC: "#8FA08A",
+      icoC: "#F2A03D",
     },
     {
       l: "Trend",
@@ -75,46 +76,119 @@ const Dash = ({ user, data, persona }) => {
       l: "Sessions",
       v: data.length,
       sub: "Completed",
-      c: "var(--honey-d)",
+      c: "var(--terracotta)",
       ico: "clip",
-      icoC: "#C4A45A",
+      icoC: "#C74A3F",
     },
   ];
 
   return (
     <div className="view-container" style={{ maxWidth: 1080 }}>
-      <div className="fu" style={{ marginBottom: 34 }}>
-        <div
-          className="cv"
-          style={{ fontSize: 15, color: "var(--mute)", marginBottom: 3 }}
-        >
-          {new Date().toLocaleDateString("en-IN", {
-            weekday: "long",
-            month: "long",
-            day: "numeric",
-          })}
-        </div>
+      {/* ── Hero Card — brain + greeting ── */}
+      <div
+        className="paper fu"
+        style={{
+          marginBottom: 28,
+          padding: 0,
+          overflow: "hidden",
+          display: "flex",
+          alignItems: "stretch",
+          minHeight: 220,
+          position: "relative",
+        }}
+      >
+        {/* Left — watercolor brain illustration */}
         <div
           style={{
-            fontFamily: "'Playfair Display',serif",
-            fontSize: 36,
-            color: "var(--brown)",
-            lineHeight: 1.1,
+            width: 260,
+            flexShrink: 0,
+            background: "linear-gradient(135deg,rgba(247,180,138,.28),rgba(242,109,91,.14))",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "16px 8px",
+            position: "relative",
+            overflow: "hidden",
           }}
         >
-          How are you, <em style={{ color: "var(--dusty)" }}>{user.name}</em>?
+          {/* watercolor blob behind figure */}
+          <div style={{
+            position: "absolute", inset: 0,
+            background: "radial-gradient(ellipse at 50% 60%, rgba(242,109,91,.22) 0%, rgba(247,180,138,.18) 40%, transparent 70%)",
+            pointerEvents: "none",
+          }} />
+          <img
+            src="/brain-main.png"
+            alt="watercolor human mind illustration"
+            style={{
+              width: 200,
+              height: 200,
+              objectFit: "contain",
+              position: "relative",
+              zIndex: 1,
+              filter: "drop-shadow(0 4px 16px rgba(199,74,63,.18))",
+            }}
+          />
         </div>
-        <p
-          style={{
-            color: "var(--mute)",
-            marginTop: 6,
-            fontStyle: "italic",
-            fontSize: 14,
-          }}
-        >
-          Your Mansik wellness sanctuary.
-        </p>
+
+        {/* Right — text content */}
+        <div style={{ flex: 1, padding: "28px 30px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+          <div
+            style={{ fontSize: 11, color: "var(--ink-meta)", marginBottom: 6, fontFamily: "'DM Mono',monospace", letterSpacing: "0.16em", textTransform: "uppercase" }}
+          >
+            {new Date().toLocaleDateString("en-IN", { weekday: "long", month: "long", day: "numeric" })}
+            {" · SESSION_"}{String(data.length + 1).padStart(3, "0")}
+          </div>
+          <div
+            style={{
+              fontFamily: "'Playfair Display',serif",
+              fontSize: 34,
+              fontStyle: "italic",
+              fontWeight: 500,
+              color: "var(--terracotta)",
+              lineHeight: 1.15,
+              textTransform: "lowercase",
+              marginBottom: 10,
+            }}
+          >
+            how are you arriving today, <em style={{ color: "var(--coral)" }}>{user.name}</em>?
+          </div>
+          <p
+            style={{
+              color: "var(--ink-meta)",
+              fontFamily: "'Source Serif 4',Georgia,serif",
+              fontStyle: "italic",
+              fontSize: 14,
+              lineHeight: 1.65,
+              maxWidth: 400,
+              marginBottom: 16,
+            }}
+          >
+            a gentle practice for the tender mind. take a breath before you begin.
+          </p>
+          {/* Mood labels — like reference image pill tags */}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {["tender", "hopeful", "present", "restless"].map((mood) => (
+              <span
+                key={mood}
+                style={{
+                  padding: "4px 14px",
+                  borderRadius: 999,
+                  fontSize: 11,
+                  fontFamily: "'DM Mono',monospace",
+                  background: "rgba(242,109,91,.12)",
+                  border: "1px solid rgba(199,74,63,.20)",
+                  color: "var(--terracotta)",
+                  letterSpacing: "0.06em",
+                }}
+              >
+                {mood}
+              </span>
+            ))}
+          </div>
+        </div>
       </div>
+
 
       {risk && (
         <div
@@ -247,8 +321,8 @@ const Dash = ({ user, data, persona }) => {
               <AreaChart data={chartD}>
                 <defs>
                   <linearGradient id="aG" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#D4A9A3" stopOpacity={0.32} />
-                    <stop offset="95%" stopColor="#D4A9A3" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#F26D5B" stopOpacity={0.35} />
+                    <stop offset="95%" stopColor="#F7B48A" stopOpacity={0.02} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid
@@ -271,11 +345,11 @@ const Dash = ({ user, data, persona }) => {
                 <Area
                   type="monotone"
                   dataKey="score"
-                  stroke="var(--dusty)"
+                  stroke="#F26D5B"
                   strokeWidth={2}
                   fill="url(#aG)"
-                  dot={{ fill: "var(--dusty)", r: 4, strokeWidth: 0 }}
-                  activeDot={{ r: 6, fill: "var(--rose)" }}
+                  dot={{ fill: "#F26D5B", r: 4, strokeWidth: 0 }}
+                  activeDot={{ r: 6, fill: "#C74A3F" }}
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -304,8 +378,8 @@ const Dash = ({ user, data, persona }) => {
           >
             {[
               ["Low (0–19)", "#7A9A78"],
-              ["Moderate (20–37)", "#A88040"],
-              ["High (38–56)", "#A8504A"],
+              ["Moderate (20–37)", "#F2A03D"],
+              ["High (38–56)", "#C74A3F"],
             ].map(([l, c2]) => (
               <div
                 key={l}

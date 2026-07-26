@@ -1,3 +1,4 @@
+// @coderabbitai review: check for security and data migration edge cases
 export function hasLocalStorageData(email) {
   const assessments = localStorage.getItem(`mansik_assessments_${email}`);
   const persona = localStorage.getItem(`mansik_persona_${email}`);

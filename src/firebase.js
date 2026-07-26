@@ -1,3 +1,4 @@
+// @coderabbitai review: check for security, bugs, and API key exposure
 import { initializeApp } from "firebase/app";
 import {
   getAuth,

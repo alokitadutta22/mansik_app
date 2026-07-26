@@ -1,3 +1,4 @@
+// @coderabbitai review: check for form input validation and score calculation security
 import { useState } from "react";
 import Ico from "../icons/Ico";
 import { PSS, SCALE, calcSc, sev, sc, fd } from "./pssData";
@@ -187,6 +188,7 @@ const Assess = ({ onSubmit, data }) => {
   if (step === "intro")
     return (
       <div className="view-container" style={{ maxWidth: 680 }}>
+        {/* ── Reflection Header ── */}
         <div
           className="paper-b fu"
           style={{
@@ -196,17 +198,6 @@ const Assess = ({ onSubmit, data }) => {
             overflow: "hidden",
           }}
         >
-          <div
-            className="blob"
-            style={{
-              width: 180,
-              height: 180,
-              background: "var(--honey)",
-              top: -55,
-              right: -35,
-              opacity: 0.22,
-            }}
-          />
           <div
             style={{
               display: "flex",
@@ -220,27 +211,29 @@ const Assess = ({ onSubmit, data }) => {
                 width: 42,
                 height: 42,
                 borderRadius: 12,
-                background: "rgba(184,131,124,.12)",
-                border: "1px solid rgba(184,131,124,.25)",
+                background: "rgba(242,109,91,.15)",
+                border: "1px solid rgba(199,74,63,.25)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <Ico n="clip" s={21} c="var(--rose)" sw={1.6} />
+              <Ico n="clip" s={21} c="var(--coral)" sw={1.6} />
             </div>
             <div>
               <div
                 className="cv"
-                style={{ fontSize: 14, color: "var(--rose)" }}
+                style={{ fontSize: 15, color: "var(--amber)", fontWeight: 600 }}
               >
-                perceived stress scale
+                perceived stress scale · reflection
               </div>
               <div
                 style={{
                   fontFamily: "'Playfair Display',serif",
                   fontSize: 28,
-                  color: "var(--brown)",
+                  fontStyle: "italic",
+                  fontWeight: 500,
+                  color: "var(--terracotta)",
                 }}
               >
                 PSS‑14 Assessment
@@ -249,17 +242,17 @@ const Assess = ({ onSubmit, data }) => {
           </div>
           <p
             style={{
-              fontFamily: "'Lora',serif",
-              fontSize: 14,
-              color: "var(--soft)",
-              lineHeight: 1.82,
+              fontFamily: "'Source Serif 4',Georgia,serif",
+              fontStyle: "italic",
+              fontSize: 14.5,
+              color: "var(--ink-soft)",
+              lineHeight: 1.8,
               marginBottom: 24,
-              maxWidth: 460,
+              maxWidth: 480,
             }}
           >
             A gentle 14-question reflection on how you have felt over the{" "}
-            <strong>past month</strong>. Take your time — there are no wrong
-            answers.
+            <strong style={{ color: "var(--terracotta)" }}>past month</strong>. Take your time — there are no wrong answers.
           </p>
           <div className="intro-grid">
             {[
@@ -270,10 +263,11 @@ const Assess = ({ onSubmit, data }) => {
               <div
                 key={l}
                 style={{
-                  background: "rgba(255,250,244,.58)",
+                  background: "rgba(251,243,231,.75)",
                   borderRadius: 13,
                   padding: "11px",
                   textAlign: "center",
+                  border: "1px solid rgba(199,74,63,.15)",
                 }}
               >
                 <div
@@ -297,7 +291,7 @@ const Assess = ({ onSubmit, data }) => {
               </div>
             ))}
           </div>
-          <button className="btn-s" data-h onClick={() => setStep("questions")}>
+          <button className="btn-s" data-h onClick={() => setStep("questions")} style={{ marginTop: 6 }}>
             Begin when ready →
           </button>
         </div>

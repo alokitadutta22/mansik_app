@@ -1,3 +1,4 @@
+// @coderabbitai review: check for media handling, audio security, and state cleanup
 import { useState } from "react";
 import Ico from "../icons/Ico";
 import { TRACKS } from "./tracks";

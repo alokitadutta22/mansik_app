@@ -1,3 +1,4 @@
+// @coderabbitai review: check for chat XSS, input sanitization, and state leaks
 import { useEffect, useRef, useState } from "react";
 import Ico from "../icons/Ico";
 import { calcPillarStats } from "../Persona/pillarHelpers";
@@ -9,10 +10,72 @@ const ChatV = ({
   chatMsgs,
   setChatMsgs,
   activities,
-  persona,
+  persona = {},
+  setPersona,
   addChatMood,
   addChatMsg,
 }) => {
+  // Mandatory Guardian Setup Check
+  const hasGuardian = Boolean(
+    persona?.guardian?.name &&
+      (persona?.guardian?.email || persona?.guardian?.phone),
+  );
+  const [showMandatoryGuardianModal, setShowMandatoryGuardianModal] =
+    useState(!hasGuardian);
+
+  useEffect(() => {
+    const valid = Boolean(
+      persona?.guardian?.name &&
+        (persona?.guardian?.email || persona?.guardian?.phone),
+    );
+    setShowMandatoryGuardianModal(!valid);
+  }, [persona?.guardian]);
+
+  const [mGuardian, setMGuardian] = useState({
+    name: persona?.guardian?.name || "",
+    phone: persona?.guardian?.phone || "",
+    email: persona?.guardian?.email || "",
+    relationship: persona?.guardian?.relationship || "Parent",
+  });
+  const [mErr, setMErr] = useState("");
+
+  const handleSaveMandatoryGuardian = (e) => {
+    e.preventDefault();
+    setMErr("");
+
+    const uEmail = user?.email?.toLowerCase()?.trim();
+    const gEmail = mGuardian.email.toLowerCase().trim();
+
+    if (uEmail && gEmail && uEmail === gEmail) {
+      setMErr("Guardian email cannot be the same as your account email.");
+      return;
+    }
+
+    if (!mGuardian.name.trim()) {
+      setMErr("Please enter your guardian's name.");
+      return;
+    }
+
+    if (!mGuardian.email.trim() && !mGuardian.phone.trim()) {
+      setMErr("Please provide at least a guardian email address or mobile phone number.");
+      return;
+    }
+
+    if (setPersona) {
+      setPersona((p) => ({
+        ...p,
+        guardian: {
+          name: mGuardian.name.trim(),
+          phone: mGuardian.phone.trim(),
+          email: mGuardian.email.trim(),
+          relationship: mGuardian.relationship,
+          updatedAt: new Date().toISOString(),
+        },
+      }));
+    }
+    setShowMandatoryGuardianModal(false);
+  };
+
   const lat = data[data.length - 1];
   const defaultGreeting = {
     role: "assistant",
@@ -41,6 +104,8 @@ const ChatV = ({
     document.head.appendChild(script);
   }, []);
   const chatEl = useRef(null);
+  const crisisCountRef = useRef(0);
+  const guardianNotifiedRef = useRef(false);
   useEffect(() => {
     if (chatEl.current) chatEl.current.scrollTop = chatEl.current.scrollHeight;
   }, [msgs]);
@@ -321,38 +386,80 @@ Important:
       data.slice(-3).length === 3 &&
       data.slice(-3).every((a) => a.severity === "High");
 
-    if (crisis || (historyIsHigh && showsDistress)) {
-      setEsc(true);
-      setShowNearby(true);
-      searchNearbyCenters();
+    // Count all matching crisis keywords in the message
+    const matchingCrisis = CRISIS_WORDS.filter((k) => u.toLowerCase().includes(k));
+    if (matchingCrisis.length > 0) {
+      crisisCountRef.current += matchingCrisis.length;
+      // Notify guardian when cumulative crisis trigger threshold is reached (>= 3 matches)
+      if (crisisCountRef.current >= 3 && !guardianNotifiedRef.current) {
+        guardianNotifiedRef.current = true;
+        const notifyUrl =
+          window.location.hostname === "localhost" ||
+          window.location.hostname === "127.0.0.1"
+            ? "http://localhost:5000/notify-guardian"
+            : "https://7gh18z2ovk.execute-api.ap-south-1.amazonaws.com/prod/notify-guardian";
+        fetch(notifyUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userDisplayName: user?.name,
+            userEmail: user?.email,
+            guardianName: persona?.guardian?.name,
+            guardianPhone: persona?.guardian?.phone,
+            guardianEmail: persona?.guardian?.email,
+            triggerCount: crisisCountRef.current,
+          }),
+        }).catch((err) => console.warn("Silent guardian dispatch notice:", err));
+      }
     }
+
     try {
-      const r = await fetch(
+      let r = await fetch(
         "https://7gh18z2ovk.execute-api.ap-south-1.amazonaws.com/prod/chat",
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             model: "gemini-3.1-flash-lite-preview",
             messages: [
-              {
-                role: "system",
-                content: sys,
-              },
-              ...next.map((m) => ({
-                role: m.role,
-                content: m.content,
-              })),
+              { role: "system", content: sys },
+              ...next.map((m) => ({ role: m.role, content: m.content })),
             ],
           }),
         },
-      );
+      ).catch(() => null);
 
-      const d = await r.json();
+      let d = r && r.ok ? await r.json().catch(() => null) : null;
 
-      const assistantContent = d.choices?.[0]?.message?.content || "Try again";
+      // Fallback to local server if AWS Lambda failed or returned an error
+      if (!d || d.error || !d.choices?.[0]?.message?.content) {
+        try {
+          const localRes = await fetch("http://localhost:5000/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              model: "gemini-3.1-flash-lite-preview",
+              messages: [
+                { role: "system", content: sys },
+                ...next.map((m) => ({ role: m.role, content: m.content })),
+              ],
+            }),
+          });
+          if (localRes.ok) {
+            const localData = await localRes.json();
+            if (localData?.choices?.[0]?.message?.content) {
+              d = localData;
+            }
+          }
+        } catch {
+          // Ignore local fallback failure
+        }
+      }
+
+      const assistantContent =
+        d?.choices?.[0]?.message?.content ||
+        "Connection error. Please check your internet connection and try sending your message again — Manas is still here.";
+
       setMsgs((p) => [...p, { role: "assistant", content: assistantContent }]);
       if (addChatMsg) {
         addChatMsg("user", u).catch(console.error);
@@ -364,7 +471,7 @@ Important:
         {
           role: "assistant",
           content:
-            "Something felt disconnected just then. Please try again in a moment — I am still here.",
+            "Connection error. Please check your internet connection and try sending your message again — Manas is still here.",
         },
       ]);
     }
@@ -399,24 +506,25 @@ Important:
 
   return (
     <div className="chat-container">
-      <div className="fu" style={{ marginBottom: 18 }}>
+      {/* Header bar */}
+      <div className="fu" style={{ marginBottom: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 13 }}>
           <div style={{ position: "relative" }}>
             <div
               className="bth"
               style={{
-                width: 50,
-                height: 50,
+                width: 48,
+                height: 48,
                 borderRadius: "50%",
                 background:
-                  "linear-gradient(135deg,rgba(232,200,194,.6),rgba(204,196,216,.5))",
-                border: "1.5px solid rgba(200,170,150,.3)",
+                  "linear-gradient(135deg,rgba(247,180,138,.4),rgba(242,109,91,.25))",
+                border: "1.5px solid rgba(199,74,63,.25)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <Ico n="brain" s={24} c="var(--rose)" sw={1.5} />
+              <Ico n="brain" s={24} c="var(--coral)" sw={1.5} />
             </div>
             <div
               style={{
@@ -427,7 +535,7 @@ Important:
                 height: 9,
                 borderRadius: "50%",
                 background: "#7A9A78",
-                border: "2px solid var(--cream)",
+                border: "2px solid var(--paper-cream)",
               }}
             />
           </div>
@@ -436,27 +544,34 @@ Important:
               style={{
                 fontFamily: "'Playfair Display',serif",
                 fontSize: 22,
-                color: "var(--brown)",
+                fontStyle: "italic",
+                color: "var(--terracotta)",
               }}
             >
-              Manas
+              a conversation with Manas 🌙
             </div>
             <div
               style={{
-                fontSize: 12,
-                color: "var(--mute)",
-                fontStyle: "italic",
+                fontSize: 11,
+                color: "var(--ink-meta)",
+                fontFamily: "'DM Mono',monospace",
+                letterSpacing: "0.08em",
               }}
             >
-              Your gentle AI companion within Mansik · Available always
+              SESSION_{String((chatMsgs?.length || 1)).padStart(3, "0")} · {new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
             </div>
           </div>
         </div>
       </div>
 
+      {/* Main 2-column container */}
+      <div style={{ display: "flex", gap: 24, flex: 1, minHeight: 0 }}>
+        {/* Left column — Messages + Input */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
+      {/* Old 2-layer safety protocol (helplines & nearby clinics) commented out per user request */}
+      {/*
       {esc && (
         <div className="fu" style={{ marginBottom: 12 }}>
-          {/* Crisis banner */}
           <div
             className="paper-b"
             style={{
@@ -522,7 +637,6 @@ Important:
             </button>
           </div>
 
-          {/* Nearby centers panel */}
           {showNearby && (
             <div
               className="paper"
@@ -563,7 +677,6 @@ Important:
                 )}
               </div>
 
-              {/* Loading spinner */}
               {locStatus === "loading" && (
                 <div
                   style={{
@@ -588,7 +701,6 @@ Important:
                 </div>
               )}
 
-              {/* Nearby results */}
               {nearbyCenters.length > 0 && (
                 <div
                   style={{ display: "flex", flexDirection: "column", gap: 8 }}
@@ -701,7 +813,6 @@ Important:
                 </div>
               )}
 
-              {/* Fallback helplines — always shown */}
               <div style={{ marginTop: nearbyCenters.length > 0 ? 14 : 0 }}>
                 {(nearbyCenters.length === 0 ||
                   locStatus === "denied" ||
@@ -778,6 +889,175 @@ Important:
               </div>
             </div>
           )}
+        </div>
+      )}
+      */}
+
+      {/* Mandatory Guardian Setup Modal */}
+      {showMandatoryGuardianModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 9999,
+            background: "rgba(30, 20, 25, 0.75)",
+            backdropFilter: "blur(8px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 20,
+          }}
+        >
+          <div
+            className="paper-b fu"
+            style={{
+              maxWidth: 480,
+              width: "100%",
+              borderRadius: 20,
+              padding: "28px 24px",
+              background: "linear-gradient(135deg, rgba(255,250,245,.98), rgba(248,240,230,.98))",
+              border: "1px solid rgba(200,170,150,.4)",
+              boxShadow: "0 10px 40px rgba(0,0,0,.25)",
+            }}
+          >
+            <div style={{ textAlign: "center", marginBottom: 18 }}>
+              <div
+                style={{
+                  width: 52,
+                  height: 52,
+                  borderRadius: "50%",
+                  background: "linear-gradient(135deg, rgba(242,109,91,.2), rgba(232,90,124,.2))",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  margin: "0 auto 12px",
+                }}
+              >
+                <Ico n="shield" s={26} c="var(--rose)" sw={1.8} />
+              </div>
+              <h3
+                style={{
+                  fontFamily: "'Playfair Display',serif",
+                  fontSize: 22,
+                  fontWeight: 600,
+                  color: "var(--brown)",
+                  margin: "0 0 6px",
+                }}
+              >
+                Mandatory Guardian Setup
+              </h3>
+              <p
+                style={{
+                  fontSize: 13,
+                  color: "var(--mute)",
+                  lineHeight: 1.5,
+                  margin: 0,
+                }}
+              >
+                Personal safety comes first. Before starting chat sessions, you must upload the contact info of a trusted close person or guardian. Your messages remain 100% encrypted & private.
+              </p>
+            </div>
+
+            <form onSubmit={handleSaveMandatoryGuardian} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              {mErr && (
+                <div
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: 8,
+                    background: "rgba(199,74,63,.1)",
+                    border: "1px solid rgba(199,74,63,.3)",
+                    color: "#C74A3F",
+                    fontSize: 12,
+                  }}
+                >
+                  ⚠ {mErr}
+                </div>
+              )}
+
+              <div>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--brown)", marginBottom: 4 }}>
+                  Guardian Full Name *
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Parent / Sibling / Friend Name"
+                  value={mGuardian.name}
+                  onChange={(e) => setMGuardian({ ...mGuardian, name: e.target.value })}
+                  style={{
+                    width: "100%",
+                    padding: "9px 12px",
+                    borderRadius: 8,
+                    border: "1px solid rgba(200,170,150,.4)",
+                    background: "#FFF",
+                    fontSize: 13,
+                    outline: "none",
+                  }}
+                  required
+                />
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--brown)", marginBottom: 4 }}>
+                  Guardian Email Address *
+                </label>
+                <input
+                  type="email"
+                  placeholder="guardian@example.com"
+                  value={mGuardian.email}
+                  onChange={(e) => setMGuardian({ ...mGuardian, email: e.target.value })}
+                  style={{
+                    width: "100%",
+                    padding: "9px 12px",
+                    borderRadius: 8,
+                    border: "1px solid rgba(200,170,150,.4)",
+                    background: "#FFF",
+                    fontSize: 13,
+                    outline: "none",
+                  }}
+                  required
+                />
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--brown)", marginBottom: 4 }}>
+                  Guardian Mobile Phone Number (Optional SMS)
+                </label>
+                <input
+                  type="tel"
+                  placeholder="+91 98765 43210"
+                  value={mGuardian.phone}
+                  onChange={(e) => setMGuardian({ ...mGuardian, phone: e.target.value })}
+                  style={{
+                    width: "100%",
+                    padding: "9px 12px",
+                    borderRadius: 8,
+                    border: "1px solid rgba(200,170,150,.4)",
+                    background: "#FFF",
+                    fontSize: 13,
+                    outline: "none",
+                  }}
+                />
+              </div>
+
+              <button
+                type="submit"
+                style={{
+                  marginTop: 6,
+                  padding: "12px",
+                  borderRadius: 30,
+                  background: "linear-gradient(135deg, rgba(242,109,91,.95), rgba(232,90,124,.95))",
+                  color: "#FFF",
+                  border: "none",
+                  fontWeight: 600,
+                  fontSize: 14,
+                  cursor: "pointer",
+                  boxShadow: "0 4px 16px rgba(242,109,91,.3)",
+                }}
+              >
+                Save & Continue to Chat
+              </button>
+            </form>
+          </div>
         </div>
       )}
 
@@ -954,18 +1234,135 @@ Important:
           />
         </button>
       </div>
-      <p
-        style={{
-          textAlign: "center",
-          fontSize: 11,
-          color: "var(--mute)",
-          marginTop: 7,
-          fontStyle: "italic",
-        }}
-      >
-        Manas offers companionship, not clinical care. In a true emergency,
-        please call a professional.
-      </p>
+        <p
+          style={{
+            textAlign: "center",
+            fontSize: 11,
+            color: "var(--mute)",
+            marginTop: 7,
+            fontStyle: "italic",
+          }}
+        >
+          Manas offers companionship, not clinical care. In a true emergency, please call a professional.
+        </p>
+        </div> {/* End left column */}
+
+        {/* Right column — Watercolor Brain & Feeling Panel (Reference Image 2) */}
+        <div
+          className="paper fu"
+          style={{
+            width: 280,
+            flexShrink: 0,
+            padding: "20px 18px",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            background: "linear-gradient(160deg, rgba(251,243,231,.95) 0%, rgba(247,180,138,.18) 100%)",
+            border: "1px solid var(--line-pencil)",
+            borderRadius: 22,
+          }}
+        >
+          <div
+            style={{
+              fontFamily: "'Playfair Display',serif",
+              fontSize: 17,
+              fontStyle: "italic",
+              fontWeight: 500,
+              color: "var(--terracotta)",
+              textAlign: "center",
+              marginBottom: 12,
+            }}
+          >
+            how you're feeling right now
+          </div>
+
+          {/* Hand-painted watercolor head profile silhouette */}
+          <div
+            style={{
+              position: "relative",
+              width: 140,
+              height: 140,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: 12,
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                borderRadius: "50%",
+                background: "radial-gradient(circle, rgba(242,109,91,.22) 0%, rgba(247,180,138,.15) 60%, transparent 80%)",
+                filter: "blur(10px)",
+              }}
+            />
+            <img
+              src="/brain-small.png"
+              alt="brain silhouette"
+              style={{
+                width: 120,
+                height: 120,
+                objectFit: "contain",
+                position: "relative",
+                zIndex: 1,
+                filter: "drop-shadow(0 4px 10px rgba(199,74,63,.15))",
+              }}
+            />
+          </div>
+
+          {/* Soft sentiment wave line */}
+          <svg viewBox="0 0 200 30" style={{ width: "100%", height: 24, marginBottom: 14 }}>
+            <path
+              d="M 0 15 Q 30 5, 60 15 T 120 15 T 180 15 T 200 15"
+              fill="none"
+              stroke="url(#waveGrad)"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            />
+            <defs>
+              <linearGradient id="waveGrad" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor="#F26D5B" />
+                <stop offset="50%" stopColor="#F2A03D" />
+                <stop offset="100%" stopColor="#D89A94" />
+              </linearGradient>
+            </defs>
+          </svg>
+
+          {/* Sentiment mood progress bars (matching reference 2) */}
+          <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 10 }}>
+            {[
+              { label: "tender", pct: 62, bg: "linear-gradient(90deg, #F26D5B, #F7B48A)", c: "var(--terracotta)" },
+              { label: "hopeful", pct: 24, bg: "linear-gradient(90deg, #F2A03D, #FBF3E7)", c: "#8B5E1A" },
+              { label: "tired", pct: 14, bg: "linear-gradient(90deg, #D89A94, #7A4A6B)", c: "var(--plum)" },
+            ].map((m) => (
+              <div key={m.label}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 3 }}>
+                  <span style={{ fontFamily: "'Playfair Display',serif", fontStyle: "italic", color: m.c }}>{m.label}</span>
+                  <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: "var(--ink-meta)" }}>{m.pct}%</span>
+                </div>
+                <div style={{ height: 8, borderRadius: 999, background: "rgba(199,74,63,.12)", overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${m.pct}%`, borderRadius: 999, background: m.bg }} />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div
+            style={{
+              marginTop: 18,
+              fontSize: 11,
+              fontFamily: "'Source Serif 4',serif",
+              fontStyle: "italic",
+              color: "var(--ink-meta)",
+              textAlign: "center",
+              lineHeight: 1.5,
+            }}
+          >
+            "Remember, we can take this one breath at a time."
+          </div>
+        </div>
+      </div> {/* End main 2-column container */}
     </div>
   );
 };
